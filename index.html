@@ -837,7 +837,13 @@ window.addEventListener('DOMContentLoaded', () => {
     profilGuncelle();
     kaynaklarGuncelle();
     icerikEkraniGuncelle();
-    veri.kaynaklar.forEach(k => { if(k.yuklu) kaynakYukle(k.id, true); });
+    const pid = aktifProfilId();
+if(pid && veri.profilKaynaklar[pid]) {
+  veri.profilKaynaklar[pid].forEach(kid => {
+    const k = veri.kaynaklar[kid];
+    if(k && k.yuklu) kaynakYukle(k.id, true);
+  });
+}
   }, 1600);
 
   // Video event'leri
@@ -1165,7 +1171,7 @@ async function xtreamYukle(kaynak) {
     const kanallar = await proxyFetchJson(`${base}/player_api.php?${auth}&action=get_live_streams`);
     console.log('XTREAM canlı yanıt:', Array.isArray(kanallar) ? kanallar.length + ' kanal' : typeof kanallar, kanallar);
     if(Array.isArray(kanallar)){
-      geciciIcerikler.canli.push(...kanallar.map(k=>({
+      geciciIcerik.canli.push(...kanallar.map(k=>({
         ad: k.name||'', logo: k.stream_icon||'', grup: k.category_name||'',
         url: `${base}/live/${kaynak.user}/${kaynak.pass}/${k.stream_id}.m3u8`,
         tip:'canli', streamId: k.stream_id
@@ -1177,7 +1183,7 @@ async function xtreamYukle(kaynak) {
   try {
     const filmler = await proxyFetchJson(`${base}/player_api.php?${auth}&action=get_vod_streams`);
     if(Array.isArray(filmler)){
-      geciciIcerikler.film.push(...filmler.map(f=>({
+      geciciIcerik.film.push(...filmler.map(f=>({
         ad: f.name||'', logo: f.stream_icon||f.cover||'', grup: f.category_name||'',
         url: `${base}/movie/${kaynak.user}/${kaynak.pass}/${f.stream_id}.${f.container_extension||'mp4'}`,
         tip:'film', streamId: f.stream_id,
@@ -1190,7 +1196,7 @@ async function xtreamYukle(kaynak) {
   try {
     const seriler = await proxyFetchJson(`${base}/player_api.php?${auth}&action=get_series`);
     if(Array.isArray(seriler)){
-      geciciIcerikler.dizi.push(...seriler.map(s=>({
+      geciciIcerik.dizi.push(...seriler.map(s=>({
         ad: s.name||'', logo: s.cover||'', grup: s.category_name||'',
         url: `${base}/series/${kaynak.user}/${kaynak.pass}/${s.series_id}`,
         tip:'dizi', seriesId: s.series_id,
@@ -1225,7 +1231,7 @@ async function stbYukle(kaynak) {
       `${base}/portal.php?action=get_ordered_list&type=itv&action=get_ordered_list&p=1&JsHttpRequest=1-xml`
     );
     const kanallar = data?.js?.data || [];
-    Icerikler.canli.push(...kanallar.map(k=>({
+    geciciIcerik.canli.push(...kanallar.map(k=>({
       ad: k.name||'', logo: k.logo||'', grup: k.tv_genre_id||'',
       url: `${base}/ch/${k.id}`, tip:'canli', stbId: k.id
     })));
@@ -1237,7 +1243,7 @@ async function stbYukle(kaynak) {
       `${base}/portal.php?action=get_ordered_list&type=vod&p=1&JsHttpRequest=1-xml`
     );
     const vodlar = data?.js?.data || [];
-    Icerikler.film.push(...vodlar.map(v=>({
+    geciciIcerik.film.push(...vodlar.map(v=>({
       ad: v.name||'', logo: v.screenshot_uri||'', grup: v.category_id||'',
       url: `${base}/vod/${v.id}`, tip:'film', stbId: v.id
     })));
@@ -1527,17 +1533,17 @@ function aramaToggle() {
 function aramaYap(q, sekme) {
   q = q.toLowerCase().trim();
   if(sekme==='canli'){
-    const filtrelenmis = q ? Icerikler.canli.filter(k=>(k.ad||'').toLowerCase().includes(q)) : Icerikler.canli;
+    const filtrelenmis = q ? aktifIcerikler().canli.filter(k=>(k.ad||'').toLowerCase().includes(q)) : aktifIcerik().canli;
     document.getElementById('canliIcerik').innerHTML = filtrelenmis.length
       ? kategoriHTML(`Sonuçlar (${filtrelenmis.length})`, filtrelenmis.slice(0,50), 'canli')
       : bosDurumHTML('🔍','Sonuç bulunamadı','Farklı bir arama deneyin.','canli');
   } else if(sekme==='film'){
-    const filtrelenmis = q ? Icerikler.film.filter(f=>(f.ad||'').toLowerCase().includes(q)) : Icerikler.film;
+    const filtrelenmis = q ? aktifIcerik().film.filter(f=>(f.ad||'').toLowerCase().includes(q)) : aktifIcerik().film;
     document.getElementById('filmIcerik').innerHTML = filtrelenmis.length
       ? kategoriHTML(`Sonuçlar (${filtrelenmis.length})`, filtrelenmis.slice(0,50), 'film')
       : bosDurumHTML('🔍','Sonuç bulunamadı','Farklı bir arama deneyin.','film');
   } else if(sekme==='dizi'){
-    const filtrelenmis = q ? Icerikler.dizi.filter(d=>(d.ad||'').toLowerCase().includes(q)) : Icerikler.dizi;
+    const filtrelenmis = q ? aktifIcerik().dizi.filter(d=>(d.ad||'').toLowerCase().includes(q)) : aktifIcerik().dizi;
     document.getElementById('diziIcerik').innerHTML = filtrelenmis.length
       ? kategoriHTML(`Sonuçlar (${filtrelenmis.length})`, filtrelenmis.slice(0,50), 'dizi')
       : bosDurumHTML('🔍','Sonuç bulunamadı','Farklı bir arama deneyin.','dizi');
@@ -1581,7 +1587,7 @@ function sezonSeciciAc(sid) {
 function m3uDiziSezonlariCoz(item) {
   // Aynı dizinin tüm bölümlerini bul (ad benzerliğine göre)
   const diziAd = item.ad.replace(/\s*[Ss]\d+[Ee]\d+.*/i,'').trim();
-  const ilgili = Icerikler.dizi.filter(d => {
+  const ilgili = aktifIcerikler().dizi.filter(d => {
     const base = d.ad.replace(/\s*[Ss]\d+[Ee]\d+.*/i,'').trim();
     return base.toLowerCase() === diziAd.toLowerCase() ||
            d.ad.toLowerCase().includes(diziAd.toLowerCase().slice(0, 8));
@@ -2090,4 +2096,4 @@ function toast(mesaj) {
 }
 </script>
 </body>
-</html>
+  </html>
