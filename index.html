@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WuSoon</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js"></script>
+<script>
+// hls.js yüklenemezse yedek CDN dene
+window.addEventListener('error', function(e) {
+  if(e.target && e.target.src && e.target.src.includes('hls')) {
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js';
+    document.head.appendChild(s);
+  }
+}, true);
+</script>
+<style>
+  :root {
+    --kirmizi: #E50914;
+    --kirmizi-koyu: #B20710;
+    --siyah: #0A0A0A;
+    --siyah2: #111111;
+    --siyah3: #1A1A1A;
+    --siyah4: #242424;
+    --gri: #808080;
+    --gri-acik: #B3B3B3;
+    --beyaz: #FFFFFF;
+    --alt-menu-h: 65px;
+    --ust-menu-h: 56px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:var(--siyah); color:var(--beyaz); font-family:'Nunito',sans-serif; min-height:100vh; overflow-x:hidden; padding-bottom:var(--alt-menu-h); }
+  html { scrollbar-width:none; } ::-webkit-scrollbar { display:none; }
+
+  /* YÜKLEME */
+  #yukleme { position:fixed; inset:0; background:var(--siyah); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction:column; gap:20px; transition:opacity .4s ease; }
+  #yukleme .logo-buyuk { font-family:'Bebas Neue',sans-serif; font-size:64px; color:var(--kirmizi); letter-spacing:4px; animation:logoParla 1.5s ease infinite alternate; }
+  @keyframes logoParla { from{text-shadow:0 0 20px rgba(229,9,20,.3)} to{text-shadow:0 0 60px rgba(229,9,20,.8)} }
+  .yukleme-bar { width:160px; height:3px; background:var(--siyah3); border-radius:2px; overflow:hidden; }
+  .yukleme-bar-ic { height:100%; background:var(--kirmizi); border-radius:2px; animation:yukleSol 1.8s ease infinite; }
+  @keyframes yukleSol { 0%{width:0%;margin-left:0} 50%{width:70%;margin-left:15%} 100%{width:0%;margin-left:100%} }
+  #yukleme.gizle { opacity:0; pointer-events:none; }
+
+  /* HEADER */
+  #header { position:fixed; top:0; left:0; right:0; height:var(--ust-menu-h); background:linear-gradient(to bottom,rgba(10,10,10,.98) 0%,rgba(10,10,10,.7) 80%,transparent 100%); display:flex; align-items:center; justify-content:space-between; padding:0 16px; z-index:100; }
+  .header-logo { font-family:'Bebas Neue',sans-serif; font-size:32px; color:var(--kirmizi); letter-spacing:2px; }
+  .header-sag { display:flex; align-items:center; gap:12px; }
+  .profil-btn { width:36px; height:36px; border-radius:6px; background:var(--kirmizi); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--beyaz); font-weight:900; font-family:'Nunito',sans-serif; }
+  .arama-btn { background:none; border:none; cursor:pointer; color:var(--beyaz); padding:4px; display:flex; }
+
+  /* PROFİL MENÜSÜ */
+  #profilMenu { position:fixed; top:56px; right:10px; background:var(--siyah3); border:1px solid var(--siyah4); border-radius:10px; min-width:220px; z-index:200; display:none; box-shadow:0 8px 30px rgba(0,0,0,.8); overflow:hidden; animation:acilMenu .2s ease; }
+  @keyframes acilMenu { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  #profilMenu.acik { display:block; }
+  .profil-menu-baslik { padding:12px 16px; font-size:11px; color:var(--gri); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--siyah4); }
+  .profil-item { display:flex; align-items:center; gap:12px; padding:12px 16px; cursor:pointer; transition:background .15s; }
+  .profil-item:hover { background:var(--siyah4); }
+  .profil-item.aktif { background:rgba(229,9,20,.1); }
+  .profil-avatar { width:36px; height:36px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px; color:var(--beyaz); flex-shrink:0; }
+  .profil-item-bilgi { flex:1; }
+  .profil-item-ad { font-weight:700; font-size:14px; }
+  .profil-item-alt { font-size:11px; color:var(--gri); }
+  .profil-aktif-rozet { width:8px; height:8px; border-radius:50%; background:var(--kirmizi); }
+  .profil-menu-alt { border-top:1px solid var(--siyah4); }
+  .profil-menu-btn { display:flex; align-items:center; gap:10px; padding:12px 16px; cursor:pointer; font-size:13px; color:var(--gri-acik); transition:background .15s; }
+  .profil-menu-btn:hover { background:var(--siyah4); color:var(--beyaz); }
+
+  /* ANA EKRAN */
+  #anaEkran { padding-top:var(--ust-menu-h); min-height:100vh; }
+  .sekme { display:none; }
+  .sekme.aktif { display:block; }
+
+  /* HERO */
+  .hero { position:relative; width:100%; height:52vw; max-height:380px; min-height:220px; overflow:hidden; }
+  .hero-bg { position:absolute; inset:0; background-size:cover; background-position:center top; transition:opacity .5s; }
+  .hero-bg-overlay { position:absolute; inset:0; background:linear-gradient(to right,rgba(10,10,10,.9) 0%,rgba(10,10,10,.3) 60%,transparent 100%); }
+  .hero-alti { position:absolute; bottom:0; left:0; right:0; height:60%; background:linear-gradient(to bottom,transparent,var(--siyah)); }
+  .hero-icerik { position:absolute; bottom:20px; left:16px; right:16px; }
+  .hero-baslik { font-family:'Bebas Neue',sans-serif; font-size:36px; letter-spacing:2px; line-height:1; text-shadow:0 2px 8px rgba(0,0,0,.8); margin-bottom:6px; }
+  .hero-meta { display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:12px; color:var(--gri-acik); flex-wrap:wrap; }
+  .hero-puan { color:#46D369; font-weight:700; }
+  .hero-tip-rozet { background:var(--kirmizi); color:var(--beyaz); font-size:9px; font-weight:900; padding:2px 6px; border-radius:3px; }
+  .hero-butonlar { display:flex; gap:10px; }
+  .btn-oynat { display:flex; align-items:center; gap:6px; background:var(--beyaz); color:var(--siyah); border:none; border-radius:4px; padding:9px 20px; font-weight:900; font-size:14px; cursor:pointer; font-family:'Nunito',sans-serif; }
+  .btn-bilgi { display:flex; align-items:center; gap:6px; background:rgba(109,109,110,.7); color:var(--beyaz); border:none; border-radius:4px; padding:9px 20px; font-weight:700; font-size:14px; cursor:pointer; font-family:'Nunito',sans-serif; }
+
+  /* KATEGORİ & KARTLAR */
+  .kategori { margin:16px 0 8px; }
+  .kategori-baslik { font-size:16px; font-weight:900; padding:0 16px; margin-bottom:10px; }
+  .kartlar { display:flex; overflow-x:auto; gap:10px; padding:0 16px 8px; scrollbar-width:none; scroll-snap-type:x mandatory; }
+  .kartlar::-webkit-scrollbar { display:none; }
+  .kart { flex-shrink:0; width:110px; cursor:pointer; scroll-snap-align:start; transition:transform .2s; }
+  .kart:active { transform:scale(.95); }
+  .kart-poster { width:110px; height:160px; border-radius:6px; background:var(--siyah3); position:relative; overflow:hidden; }
+  .kart-poster img { width:100%; height:100%; object-fit:cover; border-radius:6px; display:block; }
+  .kart-poster-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--siyah3),var(--siyah4)); font-size:32px; }
+  .kart-badge { position:absolute; top:6px; left:6px; background:var(--kirmizi); color:var(--beyaz); font-size:9px; font-weight:900; padding:2px 5px; border-radius:3px; }
+  .kart-baslik { margin-top:6px; font-size:12px; font-weight:700; color:var(--gri-acik); line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* Canli kart yatay */
+  .kart-canli { width:180px; }
+  .kart-canli .kart-poster { width:180px; height:102px; }
+  .canli-rozet { position:absolute; top:6px; left:6px; background:var(--kirmizi); color:var(--beyaz); font-size:9px; font-weight:900; padding:2px 6px; border-radius:3px; display:flex; align-items:center; gap:4px; animation:canliYan 1.2s ease infinite; }
+  @keyframes canliYan { 0%,100%{opacity:1} 50%{opacity:.6} }
+  .canli-nokta { width:6px; height:6px; border-radius:50%; background:var(--beyaz); }
+  /* İskelet yükleme */
+  .iskelet { background:linear-gradient(90deg,var(--siyah3) 25%,var(--siyah4) 50%,var(--siyah3) 75%); background-size:200% 100%; animation:iskeletAnim 1.5s infinite; border-radius:6px; }
+  @keyframes iskeletAnim { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* ALT MENÜ */
+  #altMenu { position:fixed; bottom:0; left:0; right:0; height:var(--alt-menu-h); background:rgba(10,10,10,.97); border-top:1px solid rgba(255,255,255,.08); display:flex; z-index:100; backdrop-filter:blur(10px); }
+  .alt-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:none; border:none; cursor:pointer; color:var(--gri); transition:color .2s; padding:6px 0; }
+  .alt-btn.aktif { color:var(--beyaz); }
+  .alt-btn svg { width:22px; height:22px; stroke-width:1.8; }
+  .alt-btn-yazi { font-size:10px; font-weight:700; font-family:'Nunito',sans-serif; }
+  .alt-ikon-wrap { position:relative; display:flex; }
+  .alt-btn.aktif .alt-ikon-wrap::after { content:''; position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--kirmizi); }
+
+  /* AYARLAR */
+  .ayarlar-bolum { padding:16px; }
+  .ayarlar-baslik { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:2px; margin-bottom:20px; }
+  .ayarlar-grup-baslik { font-size:11px; font-weight:700; color:var(--gri); text-transform:uppercase; letter-spacing:1px; margin:20px 0 8px; }
+  .ayarlar-kart { background:var(--siyah3); border-radius:10px; overflow:hidden; margin-bottom:12px; }
+  .ayar-item { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.05); cursor:pointer; transition:background .15s; }
+  .ayar-item:last-child { border-bottom:none; }
+  .ayar-item:active { background:var(--siyah4); }
+  .ayar-item-sol { display:flex; align-items:center; gap:12px; }
+  .ayar-ikon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .ayar-item-ad { font-weight:700; font-size:15px; }
+  .ayar-item-alt { font-size:12px; color:var(--gri); margin-top:2px; }
+  .ayar-ok { color:var(--gri); font-size:18px; }
+
+  /* KAYNAK LISTESI AYARLARDA */
+  .kaynak-item { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,.05); }
+  .kaynak-item:last-child { border-bottom:none; }
+  .kaynak-tip-rozet { padding:3px 8px; border-radius:5px; font-size:10px; font-weight:900; letter-spacing:.5px; flex-shrink:0; }
+  .rozet-m3u { background:rgba(0,144,234,.2); color:#0090EA; }
+  .rozet-stb { background:rgba(229,9,20,.2); color:var(--kirmizi); }
+  .rozet-xtream { background:rgba(155,89,182,.2); color:#9B59B6; }
+  .kaynak-yukle-btn { background:var(--kirmizi); border:none; border-radius:6px; color:var(--beyaz); font-size:11px; font-weight:900; padding:5px 10px; cursor:pointer; font-family:'Nunito',sans-serif; white-space:nowrap; }
+  .kaynak-yukle-btn:disabled { background:var(--siyah4); color:var(--gri); cursor:default; }
+  .kaynak-yuklu { color:#46D369; font-size:11px; font-weight:700; }
+  .kaynak-sil-btn { background:none; border:none; color:var(--gri); font-size:16px; cursor:pointer; padding:4px; margin-left:4px; }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:500; display:none; align-items:flex-end; justify-content:center; }
+  .modal-overlay.acik { display:flex; animation:modalAc .25s ease; }
+  @keyframes modalAc { from{opacity:0} to{opacity:1} }
+  .modal-kart { background:var(--siyah2); border-radius:20px 20px 0 0; width:100%; max-width:480px; padding:0 0 30px; animation:modalYukari .25s ease; max-height:90vh; overflow-y:auto; }
+  @keyframes modalYukari { from{transform:translateY(100px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-tutac { width:40px; height:4px; border-radius:2px; background:var(--siyah4); margin:12px auto 0; }
+  .modal-baslik { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:1px; padding:16px 20px 0; }
+  .modal-tab-bar { display:flex; gap:4px; padding:16px 20px 0; }
+  .modal-tab { flex:1; padding:10px; background:var(--siyah3); border:none; border-radius:8px; color:var(--gri); font-family:'Nunito',sans-serif; font-size:12px; font-weight:700; cursor:pointer; transition:all .2s; }
+  .modal-tab.aktif { background:var(--kirmizi); color:var(--beyaz); }
+  .modal-tab-icerik { padding:16px 20px 0; }
+  .modal-tab-panel { display:none; }
+  .modal-tab-panel.aktif { display:block; }
+  .form-grup { margin-bottom:14px; }
+  .form-label { display:block; font-size:11px; font-weight:700; color:var(--gri); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .form-input { width:100%; background:var(--siyah3); border:1px solid var(--siyah4); border-radius:8px; padding:12px 14px; color:var(--beyaz); font-family:'Nunito',sans-serif; font-size:14px; outline:none; transition:border-color .2s; }
+  .form-input:focus { border-color:var(--kirmizi); }
+  .form-input::placeholder { color:var(--gri); }
+  .btn-kaydet { width:100%; background:var(--kirmizi); color:var(--beyaz); border:none; border-radius:10px; padding:14px; font-family:'Nunito',sans-serif; font-size:16px; font-weight:900; cursor:pointer; transition:background .2s; }
+  .btn-kaydet:active { background:var(--kirmizi-koyu); }
+
+  /* PROFİL EKLEME */
+  .renk-secici { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .renk-secici-item { width:36px; height:36px; border-radius:8px; border:3px solid transparent; cursor:pointer; transition:transform .15s; }
+  .renk-secici-item.secili { border-color:var(--beyaz); transform:scale(1.15); }
+
+  /* DETAY MODALİ */
+  #detayModal { position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:600; display:none; overflow-y:auto; }
+  #detayModal.acik { display:block; animation:modalAc .2s ease; }
+  .detay-ust { position:relative; height:56vw; max-height:320px; min-height:200px; overflow:hidden; }
+  .detay-ust-bg { position:absolute; inset:0; background-size:cover; background-position:center; filter:brightness(.5); }
+  .detay-ust-overlay { position:absolute; inset:0; background:linear-gradient(to bottom,transparent 40%,rgba(10,10,10,1) 100%); }
+  .detay-kapat { position:absolute; top:12px; right:12px; background:rgba(0,0,0,.6); border:none; border-radius:50%; width:34px; height:34px; color:var(--beyaz); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .detay-icerik { padding:0 16px 30px; margin-top:-20px; position:relative; }
+  .detay-baslik { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; margin-bottom:6px; }
+  .detay-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; font-size:12px; color:var(--gri-acik); }
+  .detay-aciklama { font-size:13px; color:var(--gri-acik); line-height:1.6; margin-bottom:18px; }
+  .detay-butonlar { display:flex; gap:10px; margin-bottom:20px; }
+  .btn-detay-oynat { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--kirmizi); color:var(--beyaz); border:none; border-radius:8px; padding:14px; font-weight:900; font-size:16px; cursor:pointer; font-family:'Nunito',sans-serif; }
+  .btn-detay-indir { display:flex; align-items:center; justify-content:center; gap:6px; background:var(--siyah3); color:var(--beyaz); border:none; border-radius:8px; padding:14px 18px; font-weight:700; font-size:14px; cursor:pointer; font-family:'Nunito',sans-serif; }
+
+  /* YÜKLEME SPINNER */
+  .spinner { width:24px; height:24px; border:3px solid rgba(255,255,255,.2); border-top-color:var(--beyaz); border-radius:50%; animation:spin .7s linear infinite; display:inline-block; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .yukluyor-banner { display:flex; align-items:center; gap:10px; padding:12px 16px; background:var(--siyah3); border-radius:8px; margin:12px 16px; font-size:13px; font-weight:700; color:var(--gri-acik); }
+
+  /* BOŞ DURUM */
+  .bos-durum { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 30px; text-align:center; gap:14px; }
+  .bos-durum-ikon { font-size:52px; opacity:.3; }
+  .bos-durum-baslik { font-size:20px; font-weight:900; }
+  .bos-durum-alt { font-size:14px; color:var(--gri); line-height:1.5; }
+  .bos-durum-btn { background:var(--kirmizi); color:var(--beyaz); border:none; border-radius:8px; padding:12px 24px; font-family:'Nunito',sans-serif; font-size:14px; font-weight:900; cursor:pointer; margin-top:6px; }
+
+  /* ARAMA */
+  .arama-bar { margin:10px 16px; display:none; }
+  .arama-bar.acik { display:flex; }
+  .arama-input { flex:1; background:var(--siyah3); border:1px solid var(--siyah4); border-radius:10px; padding:10px 14px; color:var(--beyaz); font-family:'Nunito',sans-serif; font-size:14px; outline:none; }
+  .arama-input:focus { border-color:var(--kirmizi); }
+
+  /* TOAST */
+  #toast { position:fixed; bottom:calc(var(--alt-menu-h) + 16px); left:16px; right:16px; background:var(--siyah3); border-left:3px solid var(--kirmizi); border-radius:8px; padding:12px 16px; font-size:13px; font-weight:700; z-index:999; display:none; animation:toastGel .3s ease; }
+  @keyframes toastGel { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── VIDEO OYNATICI ── */
+  #oynatici {
+    position: fixed; inset: 0;
+    background: #000;
+    z-index: 2000;
+    display: none;
+  }
+  #oynatici.acik { display: block; }
+
+  #oynaticiVideo {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    background: #000;
+    display: block;
+    /* Tarayıcının native play butonunu gizle */
+    -webkit-media-controls: none;
+  }
+  #oynaticiVideo::-webkit-media-controls { display: none !important; }
+  #oynaticiVideo::-webkit-media-controls-enclosure { display: none !important; }
+
+  /* Kontroller overlay */
+  #oynaticiKontrol {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: space-between;
+    background: linear-gradient(to bottom,
+      rgba(0,0,0,0.75) 0%,
+      transparent 25%,
+      transparent 65%,
+      rgba(0,0,0,0.9) 100%);
+    transition: opacity .3s ease;
+    z-index: 10;
+  }
+  #oynaticiKontrol.gizli { opacity: 0; pointer-events: none; }
+
+  /* Üst bar */
+  .oy-ust {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px 10px;
+  }
+  .oy-geri-btn {
+    background: none; border: none; color: var(--beyaz);
+    font-size: 22px; cursor: pointer; padding: 4px;
+    display: flex; align-items: center;
+  }
+  .oy-baslik {
+    flex: 1; font-weight: 900; font-size: 15px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .oy-ust-btn {
+    background: rgba(255,255,255,0.15); border: none; border-radius: 6px;
+    color: var(--beyaz); font-size: 11px; font-weight: 700;
+    padding: 6px 10px; cursor: pointer; font-family: 'Nunito', sans-serif;
+    white-space: nowrap; display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Orta oynat butonu */
+  .oy-orta {
+    display: flex; align-items: center; justify-content: center; gap: 40px;
+    flex: 1;
+  }
+  .oy-orta-btn {
+    background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+    width: 56px; height: 56px; color: var(--beyaz); font-size: 24px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+    transition: background .2s, transform .1s;
+  }
+  .oy-orta-btn:active { transform: scale(0.9); }
+  .oy-oynat-btn {
+    width: 68px; height: 68px; font-size: 30px;
+    background: rgba(229,9,20,0.85);
+  }
+
+  /* Alt bar */
+  .oy-alt {
+    padding: 0 16px 20px;
+  }
+  /* Seek bar */
+  .oy-sure-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .oy-sure-metin {
+    font-size: 12px; color: var(--gri-acik); white-space: nowrap;
+    min-width: 80px; text-align: center;
+  }
+  .oy-seek {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 4px; border-radius: 2px; outline: none; cursor: pointer;
+    background: rgba(255,255,255,0.3);
+  }
+  .oy-seek::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--kirmizi); cursor: pointer;
+  }
+  .oy-seek::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--kirmizi); border: none; cursor: pointer;
+  }
+
+  /* Alt butonlar */
+  .oy-alt-butonlar {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .oy-alt-btn {
+    background: rgba(255,255,255,0.12); border: none; border-radius: 6px;
+    color: var(--beyaz); font-size: 11px; font-weight: 700;
+    padding: 6px 10px; cursor: pointer; font-family: 'Nunito', sans-serif;
+    display: flex; align-items: center; gap: 4px;
+    transition: background .2s;
+  }
+  .oy-alt-btn:active { background: rgba(229,9,20,0.6); }
+  .oy-ses-wrap {
+    display: flex; align-items: center; gap: 6px; margin-left: auto;
+  }
+  .oy-ses-slider {
+    width: 70px; -webkit-appearance: none; appearance: none;
+    height: 3px; border-radius: 2px; background: rgba(255,255,255,0.3);
+    outline: none; cursor: pointer;
+  }
+  .oy-ses-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--beyaz); cursor: pointer;
+  }
+
+  /* Yükleniyor spinner (oynatıcı içinde) */
+  .oy-spinner-wrap {
+    position: absolute; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .oy-spinner-wrap.goster { display: flex; }
+  .oy-spinner-buyuk {
+    width: 50px; height: 50px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: var(--kirmizi);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+
+  /* Seçim paneli (kalite/altyazı/ses) */
+  #secimPanel {
+    position: absolute; bottom: 80px; right: 16px;
+    background: rgba(20,20,20,0.97);
+    border: 1px solid var(--siyah4);
+    border-radius: 12px; min-width: 200px;
+    display: none; overflow: hidden;
+    z-index: 10;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+  }
+  #secimPanel.acik { display: block; animation: acilMenu .2s ease; }
+  .secim-baslik {
+    padding: 10px 14px; font-size: 11px; font-weight: 700;
+    color: var(--gri); text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 1px solid var(--siyah4);
+  }
+  .secim-item {
+    padding: 11px 14px; font-size: 14px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; gap: 10px;
+    transition: background .15s;
+  }
+  .secim-item:hover { background: var(--siyah4); }
+  .secim-item.aktif { color: var(--kirmizi); }
+  .secim-item.aktif::before { content: '✓'; color: var(--kirmizi); font-size: 14px; }
+  .secim-item:not(.aktif)::before { content: ''; width: 14px; display: inline-block; }
+
+  /* Altyazı gösterimi */
+  #altyaziGoster {
+    position: absolute; bottom: 120px; left: 0; right: 0;
+    text-align: center; pointer-events: none;
+    padding: 0 20px;
+  }
+  .altyazi-metin {
+    display: inline-block;
+    background: rgba(0,0,0,0.75);
+    color: var(--beyaz);
+    font-size: 15px; font-weight: 700;
+    padding: 4px 12px; border-radius: 4px;
+    line-height: 1.4;
+    max-width: 100%;
+  }
+
+  /* BÖLÜM LİSTESİ */
+  .bolum-item {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 0; border-bottom:1px solid rgba(255,255,255,.06);
+    cursor:pointer; transition:opacity .15s;
+  }
+  .bolum-item:active { opacity:.7; }
+  .bolum-item:last-child { border-bottom:none; }
+  .bolum-no {
+    width:36px; height:36px; border-radius:8px;
+    background:var(--siyah3); display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:900; color:var(--gri-acik); flex-shrink:0;
+  }
+  .bolum-bilgi { flex:1; }
+  .bolum-ad { font-weight:700; font-size:14px; }
+  .bolum-sure { font-size:11px; color:var(--gri); margin-top:2px; }
+  .bolum-oynat-ikon { color:var(--kirmizi); font-size:20px; }
+
+  /* FİLTRE ÇIPLARI */
+  .filtre-bar { display:flex; gap:8px; padding:0 16px 12px; overflow-x:auto; scrollbar-width:none; }
+  .filtre-bar::-webkit-scrollbar { display:none; }
+  .filtre-chip { flex-shrink:0; padding:6px 14px; border-radius:20px; border:1px solid var(--siyah4); background:var(--siyah3); color:var(--gri-acik); font-size:12px; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; transition:all .2s; }
+  .filtre-chip.aktif { background:var(--kirmizi); border-color:var(--kirmizi); color:var(--beyaz); }
+</style>
+</head>
+<body>
+
+<!-- YÜKLEME -->
+<div id="yukleme">
+  <div class="logo-buyuk">WuSoon</div>
+  <div class="yukleme-bar"><div class="yukleme-bar-ic"></div></div>
+</div>
+
+<!-- HEADER -->
+<div id="header">
+  <div class="header-logo">WuSoon</div>
+  <div class="header-sag">
+    <button class="arama-btn" onclick="aramaToggle()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+    <button class="profil-btn" id="profilBtn" onclick="profilMenuToggle()"><span id="profilHarf">?</span></button>
+  </div>
+</div>
+
+<!-- PROFİL MENÜSÜ -->
+<div id="profilMenu">
+  <div class="profil-menu-baslik">Profiller</div>
+  <div id="profilListesi"></div>
+  <div class="profil-menu-alt">
+    <div class="profil-menu-btn" onclick="profilEkleAc()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      Profil Ekle
+    </div>
+  </div>
+</div>
+
+<!-- ANA EKRAN -->
+<div id="anaEkran">
+
+  <!-- ANA SEKME -->
+  <div id="sekme-ana" class="sekme aktif">
+    <div class="arama-bar" id="aramaBar"><input class="arama-input" type="text" placeholder="Film, dizi veya kanal ara..." oninput="aramaYap(this.value,'ana')"></div>
+    <div class="hero" id="heroAlani">
+      <div class="hero-bg" id="heroBg" style="background:linear-gradient(135deg,#1a0505,#2d0d0d);"></div>
+      <div class="hero-bg-overlay"></div>
+      <div class="hero-alti"></div>
+      <div class="hero-icerik">
+        <div class="hero-baslik" id="heroBaslik">WuSoon'a Hoş Geldin</div>
+        <div class="hero-meta"><span class="hero-puan" id="heroPuan">Kaynak Ekle</span><span id="heroMeta2">Ayarlar &gt; Kaynaklar</span></div>
+        <div class="hero-butonlar">
+          <button class="btn-oynat" id="heroOynatBtn" onclick="sekmeDegistir('ayarlar')">▶ Başla</button>
+          <button class="btn-bilgi" onclick="sekmeDegistir('ayarlar')">⚙ Kaynaklar</button>
+        </div>
+      </div>
+    </div>
+    <div id="icerikAlani"></div>
+  </div>
+
+  <!-- CANLI SEKME -->
+  <div id="sekme-canli" class="sekme">
+    <div style="padding-top:10px;">
+      <div class="arama-bar acik"><input class="arama-input" type="text" placeholder="Kanal ara..." oninput="aramaYap(this.value,'canli')"></div>
+      <div class="filtre-bar" id="canliFiltreler"></div>
+      <div id="canliIcerik"></div>
+    </div>
+  </div>
+
+  <!-- FİLM SEKME -->
+  <div id="sekme-film" class="sekme">
+    <div style="padding-top:10px;">
+      <div class="arama-bar acik"><input class="arama-input" type="text" placeholder="Film ara..." oninput="aramaYap(this.value,'film')"></div>
+      <div class="filtre-bar" id="filmFiltreler"></div>
+      <div id="filmIcerik"></div>
+    </div>
+  </div>
+
+  <!-- DİZİ SEKME -->
+  <div id="sekme-dizi" class="sekme">
+    <div style="padding-top:10px;">
+      <div class="arama-bar acik"><input class="arama-input" type="text" placeholder="Dizi ara..." oninput="aramaYap(this.value,'dizi')"></div>
+      <div class="filtre-bar" id="diziFiltreler"></div>
+      <div id="diziIcerik"></div>
+    </div>
+  </div>
+
+  <!-- AYARLAR SEKME -->
+  <div id="sekme-ayarlar" class="sekme">
+    <div class="ayarlar-bolum">
+      <div class="ayarlar-baslik">Ayarlar</div>
+      <div class="ayarlar-grup-baslik">Kaynaklar</div>
+      <div class="ayarlar-kart" id="kaynaklarKart"></div>
+      <button class="btn-kaydet" style="margin-top:0;" onclick="kaynakEkleAc()">+ Kaynak Ekle</button>
+      <div class="ayarlar-grup-baslik">Profil</div>
+      <div class="ayarlar-kart">
+        <div class="ayar-item" onclick="profilEkleAc()">
+          <div class="ayar-item-sol">
+            <div class="ayar-ikon" style="background:rgba(229,9,20,.1);">👤</div>
+            <div><div class="ayar-item-ad">Profil Ekle</div><div class="ayar-item-alt" id="profilSayisi">0 profil mevcut</div></div>
+          </div>
+          <div class="ayar-ok">›</div>
+        </div>
+      </div>
+      <div class="ayarlar-grup-baslik">Uygulama</div>
+      <div class="ayarlar-kart">
+        <div class="ayar-item">
+          <div class="ayar-item-sol">
+            <div class="ayar-ikon" style="background:rgba(0,144,234,.1);">🌐</div>
+            <div><div class="ayar-item-ad">Dil</div><div class="ayar-item-alt">Türkçe</div></div>
+          </div>
+          <div class="ayar-ok">›</div>
+        </div>
+        <div class="ayar-item">
+          <div class="ayar-item-sol">
+            <div class="ayar-ikon" style="background:rgba(70,211,105,.1);">📱</div>
+            <div><div class="ayar-item-ad">Uygulama Hakkında</div><div class="ayar-item-alt">WuSoon v2.0.0</div></div>
+          </div>
+          <div class="ayar-ok">›</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ALT MENÜ -->
+<div id="altMenu">
+  <button class="alt-btn aktif" id="altBtn-ana" onclick="sekmeDegistir('ana')">
+    <div class="alt-ikon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <span class="alt-btn-yazi">Ana Sayfa</span>
+  </button>
+  <button class="alt-btn" id="altBtn-canli" onclick="sekmeDegistir('canli')">
+    <div class="alt-ikon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg></div>
+    <span class="alt-btn-yazi">Canlı</span>
+  </button>
+  <button class="alt-btn" id="altBtn-film" onclick="sekmeDegistir('film')">
+    <div class="alt-ikon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg></div>
+    <span class="alt-btn-yazi">Film</span>
+  </button>
+  <button class="alt-btn" id="altBtn-dizi" onclick="sekmeDegistir('dizi')">
+    <div class="alt-ikon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+    <span class="alt-btn-yazi">Dizi</span>
+  </button>
+  <button class="alt-btn" id="altBtn-ayarlar" onclick="sekmeDegistir('ayarlar')">
+    <div class="alt-ikon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <span class="alt-btn-yazi">Ayarlar</span>
+  </button>
+</div>
+
+<!-- KAYNAK EKLEME MODALİ -->
+<div class="modal-overlay" id="kaynakModal" onclick="modalKapat('kaynakModal',event)">
+  <div class="modal-kart">
+    <div class="modal-tutac"></div>
+    <div class="modal-baslik">Kaynak Ekle</div>
+    <div class="modal-tab-bar">
+      <button class="modal-tab aktif" onclick="kaynakTabDegistir('m3u',this)">M3U</button>
+      <button class="modal-tab" onclick="kaynakTabDegistir('stb',this)">STB Portal</button>
+      <button class="modal-tab" onclick="kaynakTabDegistir('xtream',this)">Xtream</button>
+    </div>
+    <div class="modal-tab-icerik">
+      <div class="modal-tab-panel aktif" id="tab-m3u">
+        <div class="form-grup"><label class="form-label">Kaynak Adı</label><input class="form-input" id="m3u-ad" type="text" placeholder="Örn: Ev IPTV"></div>
+        <div class="form-grup"><label class="form-label">M3U URL</label><input class="form-input" id="m3u-url" type="url" placeholder="http://..."></div>
+        <button class="btn-kaydet" onclick="kaynakKaydet('m3u')">Kaydet ve Yükle</button>
+      </div>
+      <div class="modal-tab-panel" id="tab-stb">
+        <div class="form-grup"><label class="form-label">Kaynak Adı</label><input class="form-input" id="stb-ad" type="text" placeholder="Örn: STB Portal"></div>
+        <div class="form-grup"><label class="form-label">Portal URL</label><input class="form-input" id="stb-url" type="url" placeholder="http://portal.example.com"></div>
+        <div class="form-grup"><label class="form-label">MAC Adresi</label><input class="form-input" id="stb-mac" type="text" placeholder="00:1A:79:XX:XX:XX"></div>
+        <button class="btn-kaydet" onclick="kaynakKaydet('stb')">Kaydet ve Yükle</button>
+      </div>
+      <div class="modal-tab-panel" id="tab-xtream">
+        <div class="form-grup"><label class="form-label">Kaynak Adı</label><input class="form-input" id="xt-ad" type="text" placeholder="Örn: Xtream Kodu"></div>
+        <div class="form-grup"><label class="form-label">Sunucu URL</label><input class="form-input" id="xt-url" type="url" placeholder="http://server.com:port"></div>
+        <div class="form-grup"><label class="form-label">Kullanıcı Adı</label><input class="form-input" id="xt-user" type="text" placeholder="kullanici"></div>
+        <div class="form-grup"><label class="form-label">Şifre</label><input class="form-input" id="xt-pass" type="password" placeholder="••••••"></div>
+        <button class="btn-kaydet" onclick="kaynakKaydet('xtream')">Kaydet ve Yükle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFİL EKLEME MODALİ -->
+<div class="modal-overlay" id="profilModal" onclick="modalKapat('profilModal',event)">
+  <div class="modal-kart">
+    <div class="modal-tutac"></div>
+    <div class="modal-baslik">Profil Ekle</div>
+    <div class="modal-tab-icerik">
+      <div class="form-grup"><label class="form-label">Profil Adı</label><input class="form-input" id="profil-ad" type="text" placeholder="Örn: Berat"></div>
+      <div class="form-grup">
+        <label class="form-label">Renk</label>
+        <div class="renk-secici" id="renkSecici">
+          <div class="renk-secici-item secili" style="background:#E50914" data-renk="renk1" onclick="renkSec(this)"></div>
+          <div class="renk-secici-item" style="background:#1DB954" data-renk="renk2" onclick="renkSec(this)"></div>
+          <div class="renk-secici-item" style="background:#0090EA" data-renk="renk3" onclick="renkSec(this)"></div>
+          <div class="renk-secici-item" style="background:#F5A623" data-renk="renk4" onclick="renkSec(this)"></div>
+          <div class="renk-secici-item" style="background:#9B59B6" data-renk="renk5" onclick="renkSec(this)"></div>
+        </div>
+      </div>
+      <button class="btn-kaydet" onclick="profilKaydet()">Profil Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAY MODALİ -->
+<div id="detayModal">
+  <div class="detay-ust">
+    <div class="detay-ust-bg" id="detayBg"></div>
+    <div class="detay-ust-overlay"></div>
+    <button class="detay-kapat" onclick="detayKapat()">✕</button>
+  </div>
+  <div class="detay-icerik">
+    <div class="detay-baslik" id="detayBaslik"></div>
+    <div class="detay-meta" id="detayMeta"></div>
+    <div class="detay-aciklama" id="detayAciklama"></div>
+    <div class="detay-butonlar">
+      <button class="btn-detay-oynat" id="detayOynatBtn">▶ Oynat</button>
+      <button class="btn-detay-indir" id="detayIndirBtn">⬇ İndir</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO OYNATICI -->
+<div id="oynatici">
+  <video id="oynaticiVideo" playsinline webkit-playsinline x-webkit-airplay="deny" preload="none" style="pointer-events:none;"></video>
+
+  <!-- Daima aktif dokunma katmanı -->
+  <div id="oyTapKatman" onclick="oyTapKatmanTikla()" style="position:absolute;inset:0;z-index:9;"></div>
+
+  <!-- Yükleniyor -->
+  <div class="oy-spinner-wrap" id="oySpinner">
+    <div class="oy-spinner-buyuk"></div>
+  </div>
+
+  <!-- Altyazı gösterimi -->
+  <div id="altyaziGoster"></div>
+
+  <!-- Seçim paneli -->
+  <div id="secimPanel">
+    <div class="secim-baslik" id="secimBaslik">Kalite</div>
+    <div id="secimListesi"></div>
+  </div>
+
+  <!-- Kontroller -->
+  <div id="oynaticiKontrol" onclick="kontrolTikla(event)">
+
+    <!-- Üst -->
+    <div class="oy-ust">
+      <button class="oy-geri-btn" onclick="oynaticiKapat()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="oy-baslik" id="oyBaslik">WuSoon</div>
+      <button class="oy-ust-btn" id="btnAltyazi" onclick="secimAc('altyazi',event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/></svg>
+        ALT
+      </button>
+      <button class="oy-ust-btn" id="btnSes" onclick="secimAc('ses',event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        SES
+      </button>
+      <button class="oy-ust-btn" id="btnKalite" onclick="secimAc('kalite',event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 8h3l2 8"/><path d="M13 8h4"/><path d="M15 8v8"/></svg>
+        HD
+      </button>
+    </div>
+
+    <!-- Orta -->
+    <div class="oy-orta">
+      <button class="oy-orta-btn" onclick="ileriGeri(-10)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.65"/></svg>
+      </button>
+      <button class="oy-orta-btn oy-oynat-btn" id="oynatDurBtn" onclick="oynatDurdur()">▶</button>
+      <button class="oy-orta-btn" onclick="ileriGeri(10)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.65"/></svg>
+      </button>
+    </div>
+
+    <!-- Alt -->
+    <div class="oy-alt">
+      <!-- Seek -->
+      <div class="oy-sure-bar">
+        <span class="oy-sure-metin" id="oyGecenSure">0:00 / --:--</span>
+        <input type="range" class="oy-seek" id="oySeek" min="0" max="100" value="0"
+          oninput="seekDegistir(this.value)" onchange="seekDegistir(this.value)">
+      </div>
+      <!-- Alt butonlar -->
+      <div class="oy-alt-butonlar">
+        <button class="oy-alt-btn" onclick="altyaziDosyaYukle()">
+          📎 Altyazı Yükle
+        </button>
+        <button class="oy-alt-btn" onclick="tamEkranToggle()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          Tam Ekran
+        </button>
+        <div class="oy-ses-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <input type="range" class="oy-ses-slider" id="oySes" min="0" max="1" step="0.05" value="1"
+            oninput="sesAyarla(this.value)">
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /oynaticiKontrol -->
+
+  <!-- Gizli altyazı dosyası yükleyici -->
+  <input type="file" id="altyaziDosya" accept=".srt,.vtt" style="display:none" onchange="altyaziDosyaIsle(this)">
+</div>
+
+<!-- SEZON / BÖLÜM MODALİ -->
+<div class="modal-overlay" id="sezonModal" onclick="modalKapat('sezonModal',event)">
+  <div class="modal-kart" style="max-height:85vh;">
+    <div class="modal-tutac"></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 20px 0;">
+      <div style="flex:1;">
+        <div class="modal-baslik" id="sezonDiziAd" style="padding:0;margin:0;"></div>
+        <div style="font-size:12px;color:var(--gri);margin-top:2px;" id="sezonBilgi"></div>
+      </div>
+    </div>
+    <!-- Sezon chipleri -->
+    <div class="filtre-bar" id="sezonChipleri" style="padding:12px 16px 0;"></div>
+    <!-- Bölüm listesi -->
+    <div id="bolumListesi" style="padding:8px 16px 16px;overflow-y:auto;max-height:55vh;"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════
+// DİL SİSTEMİ
+// ═══════════════════════════════
+const DILLER = {
+  tr: {
+    anaSayfa:'Ana Sayfa', canli:'Canlı', film:'Film', dizi:'Dizi', ayarlar:'Ayarlar',
+    hosGeldin:"WuSoon'a Hoş Geldin", kaynakYok:'Henüz kaynak eklenmedi',
+    kaydetildi:'Kaynak kaydedildi!', profilOlusturuldu:'Profil oluşturuldu!',
+    zorunluAlan:'Lütfen zorunlu alanları doldurun.', yukleniyor:'Yükleniyor...',
+    yuklemeTamamlandi:'İçerikler yüklendi!', yuklemHatasi:'Yükleme başarısız.',
+    canliKanallar:'Canlı Kanallar', filmler:'Filmler', diziler:'Diziler',
+    tumKategoriler:'Tümü',
+  }
+};
+let aktifDil = 'tr';
+const L = k => DILLER[aktifDil][k] || k;
+
+// ═══════════════════════════════
+// GLOBAL İÇERİK STORE (inline JSON yerine)
+// ═══════════════════════════════
+const icerikStore = new Map();
+let storeIdx = 0;
+function storeEkle(item) {
+  const id = 'i' + (storeIdx++);
+  icerikStore.set(id, item);
+  return id;
+}
+function storeAl(id) { return icerikStore.get(id); }
+let veri = { 
+  profiller: [], 
+  aktifProfil: null, 
+  profilKaynaklar: {}, // { profilId: [kaynakId, ...] }
+  kaynaklar: {},        // { kaynakId: { id, tip, ad, url, ... } }
+  profilIcerikler: {},  // { profilId: { canli:[], film:[], dizi:[] } }
+  sonIzlenenler: {},    // { profilId: { canli:[], film:[], dizi:[] } }
+  favoriler: {},        // { profilId: { canli:[], film:[], dizi:[] } }
+  oynaticiAyarlar: { ileriGeriSure: 10 } // sn
+};
+let geciciIcerik = { canli:[], film:[], dizi:[] }; // yükleme sırasında
+let aktifDetay = null;
+let mevcutKaynakId = null; // oynatıcıdaki içeriğin kaynak id'si
+
+function veriYukle() {
+  try { 
+    const k=localStorage.getItem('wusoon_v3'); 
+    if(k) {
+      veri=JSON.parse(k);
+      if(!veri.profilKaynaklar) veri.profilKaynaklar={};
+      if(!veri.kaynaklar) veri.kaynaklar={};
+      if(!veri.profilIcerikler) veri.profilIcerikler={};
+      if(!veri.sonIzlenenler) veri.sonIzlenenler={};
+      if(!veri.favoriler) veri.favoriler={};
+      if(!veri.oynaticiAyarlar) veri.oynaticiAyarlar={ileriGeriSure:10};
+    }
+  } catch(e){}
+}
+function veriKaydet() {
+  try { 
+    const kaydedilecek = {
+      profiller: veri.profiller,
+      aktifProfil: veri.aktifProfil,
+      profilKaynaklar: veri.profilKaynaklar,
+      kaynaklar: veri.kaynaklar,
+      profilIcerikler: veri.profilIcerikler,
+      sonIzlenenler: veri.sonIzlenenler,
+      favoriler: veri.favoriler,
+      oynaticiAyarlar: veri.oynaticiAyarlar
+    };
+    localStorage.setItem('wusoon_v3', JSON.stringify(kaydedilecek)); 
+  } catch(e){}
+}
+function aktifProfilId() { return veri.aktifProfil; }
+function aktifIcerikler() {
+  const pid = aktifProfilId();
+  if(!pid || !veri.profilIcerikler[pid]) return { canli:[], film:[], dizi:[] };
+  return veri.profilIcerikler[pid];
+}
+function aktifSonIzlenenler() {
+  const pid = aktifProfilId();
+  if(!pid || !veri.sonIzlenenler[pid]) return { canli:[], film:[], dizi:[] };
+  return veri.sonIzlenenler[pid];
+}
+function aktifFavoriler() {
+  const pid = aktifProfilId();
+  if(!pid || !veri.favoriler[pid]) return { canli:[], film:[], dizi:[] };
+  return veri.favoriler[pid];
+}
+
+// ═══════════════════════════════
+// BAŞLATMA
+// ═══════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  veriYukle();
+  setTimeout(() => {
+    document.getElementById('yukleme').classList.add('gizle');
+    setTimeout(() => document.getElementById('yukleme').style.display='none', 400);
+    profilGuncelle();
+    kaynaklarGuncelle();
+    icerikEkraniGuncelle();
+    veri.kaynaklar.forEach(k => { if(k.yuklu) kaynakYukle(k.id, true); });
+  }, 1600);
+
+  // Video event'leri
+  const video = document.getElementById('oynaticiVideo');
+  video.addEventListener('timeupdate', () => {
+    if(!video.duration) return;
+    const yuzde = (video.currentTime / video.duration) * 100;
+    document.getElementById('oySeek').value = yuzde;
+    document.getElementById('oyGecenSure').textContent =
+      `${sureFmt(video.currentTime)} / ${sureFmt(video.duration)}`;
+    if(altyaziAktif) altyaziGuncelle(video.currentTime);
+  });
+  video.addEventListener('waiting', () => spinnerGoster(true));
+  video.addEventListener('playing', () => { spinnerGoster(false); kontrolOtomatikGizle(); });
+  video.addEventListener('ended',   () => document.getElementById('oynatDurBtn').textContent = '▶');
+  video.addEventListener('pause',   () => document.getElementById('oynatDurBtn').textContent = '▶');
+  video.addEventListener('play',    () => document.getElementById('oynatDurBtn').textContent = '⏸');
+});
+
+// ═══════════════════════════════
+// SEKME
+// ═══════════════════════════════
+function sekmeDegistir(id) {
+  document.querySelectorAll('.sekme').forEach(s=>s.classList.remove('aktif'));
+  document.querySelectorAll('.alt-btn').forEach(b=>b.classList.remove('aktif'));
+  document.getElementById('sekme-'+id)?.classList.add('aktif');
+  document.getElementById('altBtn-'+id)?.classList.add('aktif');
+  profilMenuKapat();
+}
+
+// ═══════════════════════════════
+// PROFİL
+// ═══════════════════════════════
+const RENKLER = { renk1:'#E50914', renk2:'#1DB954', renk3:'#0090EA', renk4:'#F5A623', renk5:'#9B59B6' };
+let seciliRenk = 'renk1';
+
+function renkSec(el) {
+  document.querySelectorAll('.renk-secici-item').forEach(i=>i.classList.remove('secili'));
+  el.classList.add('secili');
+  seciliRenk = el.dataset.renk;
+}
+function profilMenuToggle() { document.getElementById('profilMenu').classList.toggle('acik'); }
+function profilMenuKapat() { document.getElementById('profilMenu').classList.remove('acik'); }
+document.addEventListener('click', e => {
+  if(!e.target.closest('#profilMenu') && !e.target.closest('#profilBtn')) profilMenuKapat();
+});
+function profilEkleAc() { profilMenuKapat(); document.getElementById('profil-ad').value=''; modalAc('profilModal'); }
+function profilKaydet() {
+  const ad = document.getElementById('profil-ad').value.trim();
+  if(!ad){ toast('Profil adı giriniz.'); return; }
+  const pid = Date.now();
+  veri.profiller.push({ id: pid, ad, renk: seciliRenk });
+  veri.profilKaynaklar[pid] = [];
+  veri.profilIcerikler[pid] = { canli: [], film: [], dizi: [] };
+  veri.sonIzlenenler[pid] = { canli: [], film: [], dizi: [] };
+  veri.favoriler[pid] = { canli: [], film: [], dizi: [] };
+  if(!veri.aktifProfil) veri.aktifProfil = pid;
+  veriKaydet(); profilGuncelle(); modalKapatId('profilModal'); toast(L('profilOlusturuldu'));
+}
+function profilSec(id) { veri.aktifProfil=id; veriKaydet(); profilGuncelle(); profilMenuKapat(); }
+function profilGuncelle() {
+  const aktif = veri.profiller.find(p=>p.id===veri.aktifProfil);
+  const btn = document.getElementById('profilBtn');
+  document.getElementById('profilHarf').textContent = aktif ? aktif.ad[0].toUpperCase() : '?';
+  btn.style.background = aktif ? (RENKLER[aktif.renk]||'var(--kirmizi)') : 'var(--kirmizi)';
+  document.getElementById('profilListesi').innerHTML = veri.profiller.map(p=>`
+    <div class="profil-item ${p.id===veri.aktifProfil?'aktif':''}" onclick="profilSec(${p.id})">
+      <div class="profil-avatar" style="background:${RENKLER[p.renk]}">${p.ad[0].toUpperCase()}</div>
+      <div class="profil-item-bilgi">
+        <div class="profil-item-ad">${p.ad}</div>
+        <div class="profil-item-alt">${p.id===veri.aktifProfil?'Aktif profil':'Profili seç'}</div>
+      </div>
+      ${p.id===veri.aktifProfil?'<div class="profil-aktif-rozet"></div>':''}
+    </div>`).join('');
+  document.getElementById('profilSayisi').textContent = `${veri.profiller.length} profil mevcut`;
+}
+
+// ═══════════════════════════════
+// KAYNAK YÖNETİMİ
+// ═══════════════════════════════
+function kaynakEkleAc() { modalAc('kaynakModal'); }
+function kaynakTabDegistir(id, el) {
+  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('aktif'));
+  document.querySelectorAll('.modal-tab-panel').forEach(p=>p.classList.remove('aktif'));
+  el.classList.add('aktif');
+  document.getElementById('tab-'+id).classList.add('aktif');
+}
+
+function kaynakKaydet(tip) {
+  let kaynak = { id: Date.now(), tip, yuklu: false };
+  if(tip==='m3u'){
+    const ad=document.getElementById('m3u-ad').value.trim(), url=document.getElementById('m3u-url').value.trim();
+    if(!ad||!url){ toast(L('zorunluAlan')); return; }
+    Object.assign(kaynak,{ad,url});
+  } else if(tip==='stb'){
+    const ad=document.getElementById('stb-ad').value.trim(), url=document.getElementById('stb-url').value.trim(), mac=document.getElementById('stb-mac').value.trim();
+    if(!ad||!url||!mac){ toast(L('zorunluAlan')); return; }
+    Object.assign(kaynak,{ad,url,mac});
+  } else if(tip==='xtream'){
+    const ad=document.getElementById('xt-ad').value.trim(), url=document.getElementById('xt-url').value.trim(), user=document.getElementById('xt-user').value.trim(), pass=document.getElementById('xt-pass').value.trim();
+    if(!ad||!url||!user||!pass){ toast(L('zorunluAlan')); return; }
+    Object.assign(kaynak,{ad,url,user,pass});
+  }
+  veri.kaynaklar[kaynak.id] = kaynak;
+  const pid = aktifProfilId();
+  if(pid) {
+    if(!veri.profilKaynaklar[pid]) veri.profilKaynaklar[pid] = [];
+    veri.profilKaynaklar[pid].push(kaynak.id);
+  }
+  veriKaydet(); kaynaklarGuncelle(); modalKapatId('kaynakModal');
+  toast(L('kaydetildi'));
+  kaynakYukle(kaynak.id, false);
+}
+
+function kaynakSilOnay(id) {
+  if(confirm('Bu kaynağı silmek istediğine emin misin?')) {
+    kaynakSil(id);
+  }
+}
+
+function kaynakSil(id) {
+  const pid = aktifProfilId();
+  if(pid && veri.profilKaynaklar[pid]) {
+    veri.profilKaynaklar[pid] = veri.profilKaynaklar[pid].filter(kid => kid !== id);
+  }
+  delete veri.kaynaklar[id];
+  if(pid && veri.profilIcerikler[pid]) {
+    veri.profilIcerikler[pid] = { canli: [], film: [], dizi: [] };
+    veri.profilKaynaklar[pid].forEach(kid => {
+      if(veri.kaynaklar[kid] && veri.kaynaklar[kid].yuklu) {
+        // içerikleri tekrar oluştur - diğer kaynaklar korunur
+      }
+    });
+    // Tüm kaynakları yeniden yükle
+    veri.profilKaynaklar[pid].forEach(kid => {
+      if(veri.kaynaklar[kid]) icerikleriYenidenOlustur(kid);
+    });
+  }
+  veriKaydet(); kaynaklarGuncelle(); icerikEkraniGuncelle();
+  toast('Kaynak silindi.');
+}
+
+function icerikleriYenidenOlustur(kaynakId) {
+  const kaynak = veri.kaynaklar[kaynakId];
+  if(!kaynak || !kaynak.yuklu) return;
+  const pid = aktifProfilId();
+  if(!pid) return;
+  // Kaynaktan gelenleri çıkar ve yeniden işaretle
+  // Bu fonksiyon silme sonrası kalan içerikleri düzeltmek için
+  ['canli','film','dizi'].forEach(tip => {
+    if(veri.profilIcerikler[pid][tip]) {
+      veri.profilIcerikler[pid][tip].forEach(i => {
+        if(i._kaynakId === kaynakId) i._kaynakId = kaynakId;
+      });
+    }
+  });
+}
+
+
+function kaynaklarGuncelle() {
+  const kart = document.getElementById('kaynaklarKart');
+  const pid = aktifProfilId();
+  const kaynakIdListesi = (pid && veri.profilKaynaklar[pid]) ? veri.profilKaynaklar[pid] : [];
+  const aktifKaynaklar = kaynakIdListesi.map(id => veri.kaynaklar[id]).filter(Boolean);
+  
+  if(aktifKaynaklar.length===0){
+    kart.innerHTML=`<div style="padding:16px;color:var(--gri);font-size:13px;text-align:center;">Henüz kaynak yok</div>`;
+    return;
+  }
+  kart.innerHTML = aktifKaynaklar.map(k=>{
+    const rc=k.tip==='m3u'?'rozet-m3u':k.tip==='stb'?'rozet-stb':'rozet-xtream';
+    const ry=k.tip==='m3u'?'M3U':k.tip==='stb'?'STB':'XTREAM';
+    const durum = k.yukluyor
+      ? `<span class="spinner" style="width:18px;height:18px;border-width:2px;"></span>`
+      : k.yuklu
+        ? `<span class="kaynak-yuklu">✓ Yüklendi</span>`
+        : `<button class="kaynak-yukle-btn" onclick="kaynakYukle(${k.id},false)">Yükle</button>`;
+    return `<div class="kaynak-item">
+      <span class="kaynak-tip-rozet ${rc}">${ry}</span>
+      <span style="font-weight:700;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${k.ad}</span>
+      ${durum}
+      ${k.yuklu ? `<button class="kaynak-yukle-btn" onclick="kaynakGuncelle(${k.id})" style="margin-left:4px;">🔄</button>` : ''}
+      <button class="kaynak-sil-btn" onclick="kaynakSilOnay(${k.id})">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════
+// M3U PARSER
+// ═══════════════════════════════
+function m3uCoz(text) {
+  const canli=[], film=[], dizi=[];
+  const satirlar = text.split('\n');
+  let meta = null;
+
+  for(let i=0; i<satirlar.length; i++){
+    const satir = satirlar[i].trim();
+    if(satir.startsWith('#EXTINF')){
+      meta = {};
+      // tvg-name
+      const adMatch = satir.match(/tvg-name="([^"]*)"/i);
+      meta.ad = adMatch ? adMatch[1] : '';
+      // tvg-logo
+      const logoMatch = satir.match(/tvg-logo="([^"]*)"/i);
+      meta.logo = logoMatch ? logoMatch[1] : '';
+      // group-title
+      const grupMatch = satir.match(/group-title="([^"]*)"/i);
+      meta.grup = grupMatch ? grupMatch[1] : '';
+      // Virgülden sonraki ad
+      const virgulMatch = satir.match(/,(.+)$/);
+      if(virgulMatch) {
+        const virgulAd = virgulMatch[1].trim();
+        if(!meta.ad) meta.ad = virgulAd;
+      }
+    } else if(satir && !satir.startsWith('#') && meta){
+      meta.url = satir;
+      if(!meta.ad) meta.ad = satir.split('/').pop().split('.')[0];
+
+      // Kategori tespiti
+      const g = (meta.grup||'').toLowerCase();
+      const a = (meta.ad||'').toLowerCase();
+      const dizi_regex = /s\d{1,2}e\d{1,2}|season|sezon|bolum|bölüm|episode/i;
+
+      if(dizi_regex.test(a) || /series|dizi|serial/i.test(g)){
+        dizi.push({...meta, tip:'dizi'});
+      } else if(/vod|movie|film|sinema/i.test(g)){
+        film.push({...meta, tip:'film'});
+      } else {
+        canli.push({...meta, tip:'canli'});
+      }
+      meta = null;
+    }
+  }
+  return { canli, film, dizi };
+}
+
+// ═══════════════════════════════
+// CORS PROXY İLE FETCH
+// ═══════════════════════════════
+
+const PROXYLER = [
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+
+async function proxyFetch(url) {
+  let sonHata = '';
+  for(let i = 0; i < PROXYLER.length; i++) {
+    try {
+      const proxyUrl = PROXYLER[i](url);
+      const r = await fetch(proxyUrl, { signal: AbortSignal.timeout(i === 0 ? 6000 : 18000) });
+      if(!r.ok) continue;
+      // allorigins JSON sarmalı
+      if(proxyUrl.includes('allorigins.win')) {
+        const j = await r.json();
+        if(j && j.contents) return j.contents;
+        continue;
+      }
+      const text = await r.text();
+      if(text && text.length > 10) return text;
+    } catch(e) { sonHata = e.message; }
+  }
+  throw new Error('Tüm bağlantı yöntemleri başarısız: ' + sonHata);
+}
+
+async function proxyFetchJson(url) {
+  for(let i = 0; i < PROXYLER.length; i++) {
+    try {
+      const proxyUrl = PROXYLER[i](url);
+      const r = await fetch(proxyUrl, { signal: AbortSignal.timeout(i === 0 ? 6000 : 18000) });
+      if(!r.ok) continue;
+      if(proxyUrl.includes('allorigins.win')) {
+        const j = await r.json();
+        if(j && j.contents) return JSON.parse(j.contents);
+        continue;
+      }
+      return await r.json();
+    } catch(e) {}
+  }
+  throw new Error('Bağlantı kurulamadı');
+}
+
+// ═══════════════════════════════
+// M3U YÜKLEME
+// ═══════════════════════════════
+async function m3uYukle(kaynak) {
+  toast(`"${kaynak.ad}" çekiliyor...`);
+  let text;
+  try {
+    text = await proxyFetch(kaynak.url);
+    console.log('M3U ham yanıt ilk 500 karakter:', text.substring(0, 500));
+  } catch(e) {
+    throw new Error('URL çekilemedi: ' + e.message);
+  }
+
+  if(!text) throw new Error('Boş yanıt geldi');
+
+  // #EXTM3U olmasa bile #EXTINF varsa çözmeye çalış
+  if(!text.includes('#EXTINF')) {
+    throw new Error(`Geçersiz M3U (${text.length} byte, "#EXTINF" bulunamadı)`);
+  }
+
+  const sonuc = m3uCoz(text);
+  const toplam = sonuc.canli.length + sonuc.film.length + sonuc.dizi.length;
+
+  if(toplam === 0) throw new Error('M3U okundu ama içerik bulunamadı');
+
+  geciciIcerik.canli.push(...sonuc.canli);
+  geciciIcerik.film.push(...sonuc.film);
+  geciciIcerik.dizi.push(...sonuc.dizi);
+
+  return toplam;
+}
+
+// ═══════════════════════════════
+// XTREAM API YÜKLEME
+// ═══════════════════════════════
+async function xtreamYukle(kaynak) {
+  const base = kaynak.url.replace(/\/$/, '');
+  const auth = `username=${kaynak.user}&password=${kaynak.pass}`;
+
+  // Canlı kanallar
+  try {
+    const kanallar = await proxyFetchJson(`${base}/player_api.php?${auth}&action=get_live_streams`);
+    console.log('XTREAM canlı yanıt:', Array.isArray(kanallar) ? kanallar.length + ' kanal' : typeof kanallar, kanallar);
+    if(Array.isArray(kanallar)){
+      geciciIcerikler.canli.push(...kanallar.map(k=>({
+        ad: k.name||'', logo: k.stream_icon||'', grup: k.category_name||'',
+        url: `${base}/live/${kaynak.user}/${kaynak.pass}/${k.stream_id}.m3u8`,
+        tip:'canli', streamId: k.stream_id
+      })));
+    }
+  } catch(e){}
+
+  // Filmler
+  try {
+    const filmler = await proxyFetchJson(`${base}/player_api.php?${auth}&action=get_vod_streams`);
+    if(Array.isArray(filmler)){
+      geciciIcerikler.film.push(...filmler.map(f=>({
+        ad: f.name||'', logo: f.stream_icon||f.cover||'', grup: f.category_name||'',
+        url: `${base}/movie/${kaynak.user}/${kaynak.pass}/${f.stream_id}.${f.container_extension||'mp4'}`,
+        tip:'film', streamId: f.stream_id,
+        yil: f.year||'', puan: f.rating||''
+      })));
+    }
+  } catch(e){}
+
+  // Diziler
+  try {
+    const seriler = await proxyFetchJson(`${base}/player_api.php?${auth}&action=get_series`);
+    if(Array.isArray(seriler)){
+      geciciIcerikler.dizi.push(...seriler.map(s=>({
+        ad: s.name||'', logo: s.cover||'', grup: s.category_name||'',
+        url: `${base}/series/${kaynak.user}/${kaynak.pass}/${s.series_id}`,
+        tip:'dizi', seriesId: s.series_id,
+        yil: s.releaseDate||'', puan: s.rating||''
+      })));
+    }
+  } catch(e){}
+}
+
+// ═══════════════════════════════
+// STB / STALKER PORTAL YÜKLEME
+// ═══════════════════════════════
+async function stbYukle(kaynak) {
+  const base = kaynak.url.replace(/\/$/, '');
+  const mac = kaynak.mac;
+
+  // Handshake — token al
+  let token = '';
+  try {
+    const hs = await proxyFetchJson(
+      `${base}/portal.php?action=handshake&type=STB&token=&JsHttpRequest=1-xml`,
+      { headers:{ 'Cookie':`mac=${mac}; stb_lang=tr; timezone=Europe/Istanbul` } }
+    );
+    token = hs?.js?.token || '';
+  } catch(e){}
+
+  if(!token){ toast('STB token alınamadı, yine de deneniyor...'); }
+
+  // Canlı kanallar
+  try {
+    const data = await proxyFetchJson(
+      `${base}/portal.php?action=get_ordered_list&type=itv&action=get_ordered_list&p=1&JsHttpRequest=1-xml`
+    );
+    const kanallar = data?.js?.data || [];
+    Icerikler.canli.push(...kanallar.map(k=>({
+      ad: k.name||'', logo: k.logo||'', grup: k.tv_genre_id||'',
+      url: `${base}/ch/${k.id}`, tip:'canli', stbId: k.id
+    })));
+  } catch(e){}
+
+  // VOD (filmler)
+  try {
+    const data = await proxyFetchJson(
+      `${base}/portal.php?action=get_ordered_list&type=vod&p=1&JsHttpRequest=1-xml`
+    );
+    const vodlar = data?.js?.data || [];
+    Icerikler.film.push(...vodlar.map(v=>({
+      ad: v.name||'', logo: v.screenshot_uri||'', grup: v.category_id||'',
+      url: `${base}/vod/${v.id}`, tip:'film', stbId: v.id
+    })));
+  } catch(e){}
+}
+
+// ═══════════════════════════════
+// ANA YÜKLEME FONKSİYONU
+// ═══════════════════════════════
+async function kaynakYukle(id, sessiz=false) {
+  const kaynak = veri.kaynaklar[id];
+  if(!kaynak || kaynak.yukluyor) return;
+  if(kaynak.yuklu && !sessiz) {
+    toast(`"${kaynak.ad}" zaten yüklü.`);
+    return;
+  }
+
+  kaynak.yukluyor = true;
+  kaynaklarGuncelle();
+  if(!sessiz) toast(`"${kaynak.ad}" bağlanıyor...`);
+
+  geciciIcerik = { canli:[], film:[], dizi:[] };
+
+  try {
+    let toplam = 0;
+    if(kaynak.tip==='m3u')     toplam = await m3uYukle(kaynak);
+    else if(kaynak.tip==='xtream') { await xtreamYukle(kaynak); toplam = geciciIcerik.canli.length + geciciIcerik.film.length + geciciIcerik.dizi.length; }
+    else if(kaynak.tip==='stb')    { await stbYukle(kaynak);    toplam = geciciIcerik.canli.length + geciciIcerik.film.length + geciciIcerik.dizi.length; }
+
+    // İçerikleri profile kaydet
+    const pid = aktifProfilId();
+    if(pid) {
+      if(!veri.profilIcerikler[pid]) veri.profilIcerikler[pid] = { canli:[], film:[], dizi:[] };
+      // Bu kaynaktan gelenleri etiketle
+      geciciIcerik.canli.forEach(i => i._kaynakId = id);
+      geciciIcerik.film.forEach(i => i._kaynakId = id);
+      geciciIcerik.dizi.forEach(i => i._kaynakId = id);
+      // Profile ekle
+      veri.profilIcerikler[pid].canli.push(...geciciIcerik.canli);
+      veri.profilIcerikler[pid].film.push(...geciciIcerik.film);
+      veri.profilIcerikler[pid].dizi.push(...geciciIcerik.dizi);
+    }
+
+    kaynak.yuklu = true;
+    toast(`✅ ${kaynak.ad}: ${toplam} içerik yüklendi`);
+  } catch(err) {
+    kaynak.yuklu = false;
+    toast(`❌ ${kaynak.ad}: ${err.message}`);
+    console.error('Kaynak yükleme hatası:', err);
+  } finally {
+    kaynak.yukluyor = false;
+    veriKaydet();
+    kaynaklarGuncelle();
+    icerikEkraniGuncelle();
+  }
+}
+
+async function kaynakGuncelle(id) {
+  const kaynak = veri.kaynaklar[id];
+  if(!kaynak) return;
+  const pid = aktifProfilId();
+  
+  // Eski içerikleri bu kaynaktan temizle
+  if(pid && veri.profilIcerikler[pid]) {
+    ['canli','film','dizi'].forEach(tip => {
+      veri.profilIcerikler[pid][tip] = veri.profilIcerikler[pid][tip].filter(i => i._kaynakId !== id);
+    });
+  }
+  
+  kaynak.yuklu = false;
+  veriKaydet();
+  await kaynakYukle(id, false);
+}
+
+// ═══════════════════════════════
+// İÇERİK EKRANI
+// ═══════════════════════════════
+function icerikEkraniGuncelle() {
+  heroGuncelle();
+  anaSekmeGuncelle();
+  canliSekmeGuncelle();
+  filmSekmeGuncelle();
+  diziSekmeGuncelle();
+}
+
+function heroGuncelle() {
+  // Hero için rastgele bir içerik seç (film veya dizi öncelikli)
+  const havuz = [...aktifIcerikler().film, ...aktifIcerikler().dizi, ...aktifIcerikler().canli];
+  if(havuz.length===0) return;
+  const rastgele = havuz[Math.floor(Math.random()*Math.min(havuz.length,20))];
+  if(!rastgele) return;
+
+  const heroBg = document.getElementById('heroBg');
+  if(rastgele.logo) {
+    heroBg.style.backgroundImage = `url('${rastgele.logo}')`;
+    heroBg.style.filter = 'brightness(0.4)';
+  }
+  document.getElementById('heroBaslik').textContent = rastgele.ad || 'WuSoon';
+  document.getElementById('heroPuan').textContent = rastgele.puan ? `⭐ ${rastgele.puan}` : rastgele.tip==='canli'?'🔴 CANLI':'';
+  document.getElementById('heroMeta2').textContent = [rastgele.yil, rastgele.grup].filter(Boolean).join(' · ');
+  document.getElementById('heroOynatBtn').onclick = () => detayAc(rastgele);
+}
+
+function anaSekmeGuncelle() {
+  const alan = document.getElementById('icerikAlani');
+  const toplamIcerik = aktifIcerikler().canli.length + aktifIcerikler().film.length + aktifIcerikler().dizi.length;
+  if(toplamIcerik===0){
+    alan.innerHTML=`<div class="bos-durum">
+      <div class="bos-durum-ikon">📡</div>
+      <div class="bos-durum-baslik">Henüz kaynak eklenmedi</div>
+      <div class="bos-durum-alt">M3U, STB portal veya Xtream kodu ekleyerek içerikleri yükle.</div>
+      <button class="bos-durum-btn" onclick="sekmeDegistir('ayarlar')">Kaynak Ekle</button>
+    </div>`;
+    return;
+  }
+  let html = '';
+  if(aktifIcerikler().canli.length>0) html += kategoriHTML('📺 Canlı Kanallar', aktifIcerikler().canli.slice(0,20), 'canli');
+  if(aktifIcerikler().film.length>0) html += kategoriHTML('🎬 Filmler', aktifIcerikler().film.slice(0,20), 'film');
+  if(aktifIcerikler().dizi.length>0) html += kategoriHTML('🎭 Diziler', aktifIcerikler().dizi.slice(0,20), 'dizi');
+  alan.innerHTML = html;
+}
+
+function kategoriHTML(baslik, liste, tip) {
+  const kartlar = liste.map(i => kartHTML(i, tip)).join('');
+  return `<div class="kategori">
+    <div class="kategori-baslik">${baslik}</div>
+    <div class="kartlar">${kartlar}</div>
+  </div>`;
+}
+
+function kartHTML(item, tip) {
+  const sid = storeEkle(item);
+  const tikla = tip==='dizi'
+    ? `sezonSeciciAc('${sid}')`
+    : `kartTikla('${sid}')`;
+
+  if(tip==='canli'){
+    return `<div class="kart kart-canli" onclick="${tikla}">
+      <div class="kart-poster">
+        ${item.logo ? `<img src="${item.logo}" onerror="this.style.display='none';this.nextSibling.style.display='flex'" loading="lazy">` : ''}
+        <div class="kart-poster-placeholder" ${item.logo?'style="display:none"':''}>📺</div>
+        <div class="canli-rozet"><div class="canli-nokta"></div>CANLI</div>
+      </div>
+      <div class="kart-baslik">${item.ad||''}</div>
+    </div>`;
+  }
+  const emoji = tip==='film'?'🎬':'🎭';
+  return `<div class="kart" onclick="${tikla}">
+    <div class="kart-poster">
+      ${item.logo ? `<img src="${item.logo}" onerror="this.style.display='none';this.nextSibling.style.display='flex'" loading="lazy">` : ''}
+      <div class="kart-poster-placeholder" ${item.logo?'style="display:none"':''}>${emoji}</div>
+    </div>
+    <div class="kart-baslik">${item.ad||''}</div>
+  </div>`;
+}
+
+function kartTikla(sid) {
+  const item = storeAl(sid);
+  if(item) detayAc(item);
+}
+
+function canliSekmeGuncelle() {
+  const alan = document.getElementById('canliIcerik');
+  if(aktifIcerikler().canli.length===0){
+    alan.innerHTML=bosDurumHTML('📺','Canlı kanal yok','Bir kaynak ekleyip yükleyin.','canli');
+    document.getElementById('canliFiltreler').innerHTML='';
+    return;
+  }
+  // Kategorilere göre grupla
+  const gruplar = {};
+  aktifIcerikler().canli.forEach(k=>{ const g=k.grup||'Diğer'; if(!gruplar[g]) gruplar[g]=[]; gruplar[g].push(k); });
+  const grupAdlari = Object.keys(gruplar);
+  
+  // Filtre chipleri
+  const filtreler = document.getElementById('canliFiltreler');
+  filtreler.innerHTML = `<button class="filtre-chip aktif" onclick="canliFiltrele('',this)">${L('tumKategoriler')}</button>` +
+    grupAdlari.slice(0,10).map(g=>`<button class="filtre-chip" onclick="canliFiltrele('${g}',this)">${g}</button>`).join('');
+
+  let html = '';
+  grupAdlari.forEach(g=>{
+    html += kategoriHTML(g, gruplar[g].slice(0,30), 'canli');
+  });
+  alan.innerHTML = html;
+}
+
+function filmSekmeGuncelle() {
+  const alan = document.getElementById('filmIcerik');
+  if(aktifIcerikler().film.length===0){
+    alan.innerHTML=bosDurumHTML('🎬','Film bulunamadı','Bir kaynak ekleyip yükleyin.','film');
+    document.getElementById('filmFiltreler').innerHTML='';
+    return;
+  }
+  const gruplar = {};
+  aktifIcerikler().film.forEach(f=>{ const g=f.grup||'Filmler'; if(!gruplar[g]) gruplar[g]=[]; gruplar[g].push(f); });
+  const grupAdlari = Object.keys(gruplar);
+  
+  const filtreler = document.getElementById('filmFiltreler');
+  filtreler.innerHTML = `<button class="filtre-chip aktif" onclick="filmFiltrele('',this)">${L('tumKategoriler')}</button>` +
+    grupAdlari.slice(0,10).map(g=>`<button class="filtre-chip" onclick="filmFiltrele('${g}',this)">${g}</button>`).join('');
+
+  let html = '';
+  grupAdlari.forEach(g=>{ html += kategoriHTML(g, gruplar[g].slice(0,30), 'film'); });
+  alan.innerHTML = html;
+}
+
+function diziSekmeGuncelle() {
+  const alan = document.getElementById('diziIcerik');
+  if(aktifIcerikler().dizi.length===0){
+    alan.innerHTML=bosDurumHTML('🎭','Dizi bulunamadı','Bir kaynak ekleyip yükleyin.','dizi');
+    document.getElementById('diziFiltreler').innerHTML='';
+    return;
+  }
+  const gruplar = {};
+  aktifIcerikler().dizi.forEach(d=>{ const g=d.grup||'Diziler'; if(!gruplar[g]) gruplar[g]=[]; gruplar[g].push(d); });
+  const grupAdlari = Object.keys(gruplar);
+
+  const filtreler = document.getElementById('diziFiltreler');
+  filtreler.innerHTML = `<button class="filtre-chip aktif" onclick="diziFiltrele('',this)">${L('tumKategoriler')}</button>` +
+    grupAdlari.slice(0,10).map(g=>`<button class="filtre-chip" onclick="diziFiltrele('${g}',this)">${g}</button>`).join('');
+
+  let html = '';
+  grupAdlari.forEach(g=>{ html += kategoriHTML(g, gruplar[g].slice(0,30), 'dizi'); });
+  alan.innerHTML = html;
+}
+
+function bosDurumHTML(ikon, baslik, alt, sekme) {
+  return `<div class="bos-durum">
+    <div class="bos-durum-ikon">${ikon}</div>
+    <div class="bos-durum-baslik">${baslik}</div>
+    <div class="bos-durum-alt">${alt}</div>
+    <button class="bos-durum-btn" onclick="sekmeDegistir('ayarlar')">Kaynak Ekle</button>
+  </div>`;
+}
+
+// ═══════════════════════════════
+// FİLTRELEME
+// ═══════════════════════════════
+function canliFiltrele(grup, el) {
+  chipAktif(el, 'canliFiltreler');
+  const alan = document.getElementById('canliIcerik');
+  const liste = grup ? aktifIcerikler().canli.filter(k=>k.grup===grup) : aktifIcerikler().canli;
+  alan.innerHTML = grup
+    ? kategoriHTML(grup, liste.slice(0,50), 'canli')
+    : (() => {
+        const gruplar={};
+        aktifIcerikler().canli.forEach(k=>{ const g=k.grup||'Diğer'; if(!gruplar[g]) gruplar[g]=[]; gruplar[g].push(k); });
+        return Object.keys(gruplar).map(g=>kategoriHTML(g, gruplar[g].slice(0,30), 'canli')).join('');
+      })();
+}
+function filmFiltrele(grup, el) {
+  chipAktif(el, 'filmFiltreler');
+  const alan = document.getElementById('filmIcerik');
+  const liste = grup ? aktifIcerikler().film.filter(f=>f.grup===grup) : aktifIcerikler().film;
+  alan.innerHTML = grup
+    ? kategoriHTML(grup, liste.slice(0,50), 'film')
+    : (() => {
+        const gruplar={};
+        aktifIcerikler().film.forEach(f=>{ const g=f.grup||'Filmler'; if(!gruplar[g]) gruplar[g]=[]; gruplar[g].push(f); });
+        return Object.keys(gruplar).map(g=>kategoriHTML(g, gruplar[g].slice(0,30), 'film')).join('');
+      })();
+}
+function diziFiltrele(grup, el) {
+  chipAktif(el, 'diziFiltreler');
+  const alan = document.getElementById('diziIcerik');
+  const liste = grup ? aktifIcerikler().dizi.filter(d=>d.grup===grup) : aktifIcerikler().dizi;
+  alan.innerHTML = grup
+    ? kategoriHTML(grup, liste.slice(0,50), 'dizi')
+    : (() => {
+        const gruplar={};
+        aktifIcerikler().dizi.forEach(d=>{ const g=d.grup||'Diziler'; if(!gruplar[g]) gruplar[g]=[]; gruplar[g].push(d); });
+        return Object.keys(gruplar).map(g=>kategoriHTML(g, gruplar[g].slice(0,30), 'dizi')).join('');
+      })();
+}
+function chipAktif(el, containerId) {
+  document.querySelectorAll(`#${containerId} .filtre-chip`).forEach(c=>c.classList.remove('aktif'));
+  el.classList.add('aktif');
+}
+
+// ═══════════════════════════════
+// ARAMA
+// ═══════════════════════════════
+function aramaToggle() {
+  const bar = document.getElementById('aramaBar');
+  bar.classList.toggle('acik');
+  if(bar.classList.contains('acik')) bar.querySelector('input').focus();
+}
+function aramaYap(q, sekme) {
+  q = q.toLowerCase().trim();
+  if(sekme==='canli'){
+    const filtrelenmis = q ? Icerikler.canli.filter(k=>(k.ad||'').toLowerCase().includes(q)) : Icerikler.canli;
+    document.getElementById('canliIcerik').innerHTML = filtrelenmis.length
+      ? kategoriHTML(`Sonuçlar (${filtrelenmis.length})`, filtrelenmis.slice(0,50), 'canli')
+      : bosDurumHTML('🔍','Sonuç bulunamadı','Farklı bir arama deneyin.','canli');
+  } else if(sekme==='film'){
+    const filtrelenmis = q ? Icerikler.film.filter(f=>(f.ad||'').toLowerCase().includes(q)) : Icerikler.film;
+    document.getElementById('filmIcerik').innerHTML = filtrelenmis.length
+      ? kategoriHTML(`Sonuçlar (${filtrelenmis.length})`, filtrelenmis.slice(0,50), 'film')
+      : bosDurumHTML('🔍','Sonuç bulunamadı','Farklı bir arama deneyin.','film');
+  } else if(sekme==='dizi'){
+    const filtrelenmis = q ? Icerikler.dizi.filter(d=>(d.ad||'').toLowerCase().includes(q)) : Icerikler.dizi;
+    document.getElementById('diziIcerik').innerHTML = filtrelenmis.length
+      ? kategoriHTML(`Sonuçlar (${filtrelenmis.length})`, filtrelenmis.slice(0,50), 'dizi')
+      : bosDurumHTML('🔍','Sonuç bulunamadı','Farklı bir arama deneyin.','dizi');
+  }
+}
+
+// ═══════════════════════════════
+// SEZON / BÖLÜM SEÇİCİ
+// ═══════════════════════════════
+let aktifDizi = null;
+let aktifSezon = 1;
+let diziSezonBolumler = {}; // { sezon: [bolumler] }
+
+function sezonSeciciAc(sid) {
+  const item = storeAl(sid);
+  if(!item) return;
+  aktifDizi = item;
+  aktifSezon = 1;
+  diziSezonBolumler = {};
+
+  document.getElementById('sezonDiziAd').textContent = item.ad || '';
+  document.getElementById('sezonBilgi').textContent = 'Sezonlar yükleniyor...';
+  document.getElementById('sezonChipleri').innerHTML = '';
+  document.getElementById('bolumListesi').innerHTML =
+    `<div style="text-align:center;padding:30px;color:var(--gri)"><div class="spinner"></div></div>`;
+
+  modalAc('sezonModal');
+
+  // M3U dizileri: sezon/bölüm addan parse edilir
+  if(item.tip === 'dizi' && !item.seriesId) {
+    m3uDiziSezonlariCoz(item);
+  } else if(item.seriesId) {
+    xtreamSezonlariYukle(item);
+  } else {
+    // Direkt bölüm gibi davran
+    m3uDiziSezonlariCoz(item);
+  }
+}
+
+// M3U'dan sezon/bölüm parse et
+function m3uDiziSezonlariCoz(item) {
+  // Aynı dizinin tüm bölümlerini bul (ad benzerliğine göre)
+  const diziAd = item.ad.replace(/\s*[Ss]\d+[Ee]\d+.*/i,'').trim();
+  const ilgili = Icerikler.dizi.filter(d => {
+    const base = d.ad.replace(/\s*[Ss]\d+[Ee]\d+.*/i,'').trim();
+    return base.toLowerCase() === diziAd.toLowerCase() ||
+           d.ad.toLowerCase().includes(diziAd.toLowerCase().slice(0, 8));
+  });
+
+  // Sezon bölümlerini grupla
+  const sezonlar = {};
+  ilgili.forEach(b => {
+    const m = b.ad.match(/[Ss](\d+)[Ee](\d+)/);
+    const sezon = m ? parseInt(m[1]) : 1;
+    const bolum = m ? parseInt(m[2]) : 1;
+    if(!sezonlar[sezon]) sezonlar[sezon] = [];
+    sezonlar[sezon].push({ ...b, sezonNo: sezon, bolumNo: bolum });
+  });
+
+  // Sezon yoksa tek bölüm gibi göster
+  if(Object.keys(sezonlar).length === 0) {
+    sezonlar[1] = [{ ...item, sezonNo: 1, bolumNo: 1 }];
+  }
+
+  Object.keys(sezonlar).forEach(s => {
+    sezonlar[s].sort((a,b) => a.bolumNo - b.bolumNo);
+  });
+
+  diziSezonBolumler = sezonlar;
+  sezonlarGoster();
+}
+
+// Xtream API'dan sezonları yükle
+async function xtreamSezonlariYukle(item) {
+  const kaynak = veri.kaynaklar.find(k => k.tip === 'xtream');
+  if(!kaynak) { m3uDiziSezonlariCoz(item); return; }
+
+  try {
+    const base = kaynak.url.replace(/\/$/, '');
+    const auth = `username=${kaynak.user}&password=${kaynak.pass}`;
+    const data = await proxyFetchJson(`${base}/player_api.php?${auth}&action=get_series_info&series_id=${item.seriesId}`);
+
+    if(data && data.episodes) {
+      diziSezonBolumler = {};
+      Object.keys(data.episodes).forEach(sezonNo => {
+        diziSezonBolumler[sezonNo] = data.episodes[sezonNo].map(ep => ({
+          ad: ep.title || `Bölüm ${ep.episode_num}`,
+          url: `${base}/series/${kaynak.user}/${kaynak.pass}/${ep.id}.${ep.container_extension||'mp4'}`,
+          logo: ep.info?.movie_image || item.logo || '',
+          tip: 'dizi',
+          sezonNo: parseInt(sezonNo),
+          bolumNo: ep.episode_num,
+          sure: ep.info?.duration || ''
+        }));
+      });
+      sezonlarGoster();
+    } else {
+      m3uDiziSezonlariCoz(item);
+    }
+  } catch(e) {
+    m3uDiziSezonlariCoz(item);
+  }
+}
+
+function sezonlarGoster() {
+  const sezonSayisi = Object.keys(diziSezonBolumler).length;
+  document.getElementById('sezonBilgi').textContent = `${sezonSayisi} Sezon`;
+
+  // Sezon chipleri
+  const chipContainer = document.getElementById('sezonChipleri');
+  chipContainer.innerHTML = Object.keys(diziSezonBolumler)
+    .sort((a,b) => parseInt(a)-parseInt(b))
+    .map(s => `<button class="filtre-chip ${parseInt(s)===aktifSezon?'aktif':''}"
+      onclick="sezonSec(${s})">Sezon ${s}</button>`).join('');
+
+  bolumlerGoster(aktifSezon);
+}
+
+function sezonSec(sezonNo) {
+  aktifSezon = parseInt(sezonNo);
+  // Chip güncelle
+  document.querySelectorAll('#sezonChipleri .filtre-chip').forEach((c,i) => {
+    c.classList.toggle('aktif', parseInt(c.textContent.replace('Sezon ','')) === aktifSezon);
+  });
+  bolumlerGoster(aktifSezon);
+}
+
+function bolumlerGoster(sezonNo) {
+  const bolumler = diziSezonBolumler[sezonNo] || [];
+  const liste = document.getElementById('bolumListesi');
+
+  if(bolumler.length === 0) {
+    liste.innerHTML = `<div style="text-align:center;padding:20px;color:var(--gri);">Bölüm bulunamadı</div>`;
+    return;
+  }
+
+  liste.innerHTML = bolumler.map((b, idx) => {
+    const bsid = storeEkle(b);
+    return `<div class="bolum-item" onclick="bolumOynat('${bsid}')">
+      <div class="bolum-no">${b.bolumNo || (idx+1)}</div>
+      <div class="bolum-bilgi">
+        <div class="bolum-ad">${b.ad}</div>
+        ${b.sure ? `<div class="bolum-sure">⏱ ${b.sure}</div>` : ''}
+      </div>
+      <div class="bolum-oynat-ikon">▶</div>
+    </div>`;
+  }).join('');
+}
+
+function bolumOynat(sid) {
+  const bolum = storeAl(sid);
+  if(!bolum) return;
+  modalKapatId('sezonModal');
+  setTimeout(() => oynaticiAc(bolum), 200);
+}
+function detayAc(item) {
+  aktifDetay = item;
+  const modal = document.getElementById('detayModal');
+  document.getElementById('detayBg').style.backgroundImage = item.logo ? `url('${item.logo}')` : 'linear-gradient(135deg,#1a0505,#2d0d0d)';
+  document.getElementById('detayBaslik').textContent = item.ad || '';
+  document.getElementById('detayMeta').innerHTML = [
+    item.tip==='canli' ? '<span class="hero-tip-rozet">CANLI</span>' : '',
+    item.tip==='film'  ? '<span class="hero-tip-rozet">FİLM</span>'  : '',
+    item.tip==='dizi'  ? '<span class="hero-tip-rozet">DİZİ</span>'  : '',
+    item.puan ? `⭐ ${item.puan}` : '',
+    item.yil  || '',
+    item.grup || '',
+  ].filter(Boolean).join('<span style="color:var(--siyah4)"> | </span>');
+  document.getElementById('detayAciklama').textContent = item.aciklama || '';
+  document.getElementById('detayOynatBtn').onclick = () => { detayKapat(); oynaticiAc(item); };
+  document.getElementById('detayIndirBtn').onclick = () => { toast('İndirme özelliği Aşama 4\'te eklenecek.'); };
+  modal.classList.add('acik');
+  document.body.style.overflow = 'hidden';
+}
+function detayKapat() {
+  document.getElementById('detayModal').classList.remove('acik');
+  document.body.style.overflow = '';
+}
+
+// ═══════════════════════════════════════════
+// VİDEO OYNATICI — AŞAMA 3
+// ═══════════════════════════════════════════
+let hls = null;
+let kontrolTimer = null;
+let aktifKalite = -1; // -1 = otomatik
+let altyaziVerisi = [];   // [{baslar, biter, metin}]
+let altyaziTimer = null;
+let altyaziAktif = false;
+let sesTraklari = [];
+let aktifSesTrak = 0;
+let oynaticiItem = null;
+
+// ── Oynatıcıyı aç ──
+function oynaticiAc(item) {
+  oynaticiItem = item;
+  const panel = document.getElementById('oynatici');
+
+  // Sıfırla
+  altyaziVerisi = [];
+  altyaziAktif = false;
+  sesTraklari = [];
+  aktifKalite = -1;
+  secimKapat();
+  document.getElementById('altyaziGoster').innerHTML = '';
+  document.getElementById('oyBaslik').textContent = item.ad || 'WuSoon';
+  document.getElementById('oySeek').value = 0;
+  document.getElementById('oyGecenSure').textContent = '0:00 / --:--';
+  document.getElementById('oynatDurBtn').textContent = '▶';
+  document.getElementById('oynaticiKontrol').classList.remove('gizli');
+  btnKaliteGuncelle('Otomatik');
+
+  panel.classList.add('acik');
+  document.body.style.overflow = 'hidden';
+  spinnerGoster(true);
+
+  // Kısa gecikme sonrası yükle (DOM hazır olsun)
+  setTimeout(() => videoYukle(item.url), 100);
+}
+
+// ── Video URL yükle (HLS veya direkt) ──
+function videoYukle(url) {
+  const video = document.getElementById('oynaticiVideo');
+  if(!url){ toast('❌ Video URL yok.'); spinnerGoster(false); return; }
+
+  console.log('Video yükleniyor:', url);
+
+  // Önceki yüklemeleri temizle
+  if(hls){ hls.destroy(); hls = null; }
+  video.removeAttribute('src');
+  video.load();
+
+  const isHLS = /\.m3u8|\/live\/|\/ch\/|\/stream\//i.test(url);
+  const isMP4  = /\.mp4|\.mkv|\.avi|\.ts$/i.test(url);
+
+  if(isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
+    // hls.js ile oynat
+    hls = new Hls({
+      maxBufferLength: 20,
+      maxMaxBufferLength: 40,
+      startLevel: -1,
+      debug: false,
+      xhrSetup: function(xhr) {
+        xhr.withCredentials = false;
+      }
+    });
+    hls.loadSource(url);
+    hls.attachMedia(video);
+
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      spinnerGoster(false);
+      video.play().then(() => {
+        document.getElementById('oynatDurBtn').textContent = '⏸';
+      }).catch(err => {
+        console.warn('Autoplay engellendi:', err);
+        spinnerGoster(false);
+        // Kullanıcı tıklaması bekleniyor
+      });
+    });
+
+    hls.on(Hls.Events.ERROR, (e, data) => {
+      console.error('HLS Hata:', data.type, data.details);
+      if(data.fatal) {
+        if(data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          toast('❌ Ağ hatası — stream açılamıyor');
+        } else if(data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          toast('❌ Video formatı desteklenmiyor');
+          hls.recoverMediaError();
+        } else {
+          toast('❌ Stream oynatılamadı');
+        }
+        spinnerGoster(false);
+      }
+    });
+
+    hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
+      sesTraklari = hls.audioTracks || [];
+    });
+
+  } else if(isHLS && video.canPlayType('application/vnd.apple.mpegurl')) {
+    // Safari / iOS native HLS
+    video.src = url;
+    video.load();
+    video.play().catch(()=>{});
+    spinnerGoster(false);
+    document.getElementById('oynatDurBtn').textContent = '⏸';
+
+  } else {
+    // Direkt MP4 / TS
+    video.src = url;
+    video.load();
+    video.play().catch(()=>{});
+    spinnerGoster(false);
+    document.getElementById('oynatDurBtn').textContent = '⏸';
+  }
+}
+
+// ── Oynatıcıyı kapat ──
+function oynaticiKapat() {
+  const video = document.getElementById('oynaticiVideo');
+  video.pause();
+  if(hls) { hls.destroy(); hls = null; }
+  video.src = '';
+  document.getElementById('oynatici').classList.remove('acik');
+  document.body.style.overflow = '';
+  clearInterval(altyaziTimer);
+  secimKapat();
+  // Tam ekrandan çık
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  else if(document.webkitFullscreenElement) document.webkitExitFullscreen();
+}
+
+// ── Oynat / Durdur ──
+function oynatDurdur() {
+  const video = document.getElementById('oynaticiVideo');
+  if(video.paused) {
+    video.play();
+    document.getElementById('oynatDurBtn').textContent = '⏸';
+  } else {
+    video.pause();
+    document.getElementById('oynatDurBtn').textContent = '▶';
+  }
+}
+
+// ── İleri / Geri ──
+function ileriGeri(saniye) {
+  const video = document.getElementById('oynaticiVideo');
+  video.currentTime = Math.max(0, video.currentTime + saniye);
+}
+
+// ── Ses ayarla ──
+function sesAyarla(deger) {
+  document.getElementById('oynaticiVideo').volume = parseFloat(deger);
+}
+
+// ── Seek ──
+function seekDegistir(deger) {
+  const video = document.getElementById('oynaticiVideo');
+  if(!isNaN(video.duration) && video.duration > 0) {
+    video.currentTime = (deger / 100) * video.duration;
+  }
+}
+
+function sureFmt(s) {
+  if(!isFinite(s)) return '--:--';
+  const d = Math.floor(s), h = Math.floor(d/3600), m = Math.floor((d%3600)/60), sn = d%60;
+  return h>0
+    ? `${h}:${String(m).padStart(2,'0')}:${String(sn).padStart(2,'0')}`
+    : `${m}:${String(sn).padStart(2,'0')}`;
+}
+
+// ── Dokunma katmanı (her zaman aktif) ──
+function oyTapKatmanTikla() {
+  const k = document.getElementById('oynaticiKontrol');
+  const panel = document.getElementById('secimPanel');
+  if(panel.classList.contains('acik')) { secimKapat(); return; }
+  if(k.classList.contains('gizli')) {
+    k.classList.remove('gizli');
+    kontrolOtomatikGizle();
+  } else {
+    k.classList.add('gizli');
+    clearTimeout(kontrolTimer);
+  }
+}
+
+// ── Kontrol görünürlüğü ──
+function kontrolTikla(e) {
+  if(e.target.closest('button') || e.target.closest('input') || e.target.closest('#secimPanel')) return;
+  // Tap katmanı hallediyor, burada sadece buton tıklamalarını geçir
+}
+function kontrolGoster() {
+  document.getElementById('oynaticiKontrol').classList.remove('gizli');
+  kontrolOtomatikGizle();
+}
+function kontrolOtomatikGizle() {
+  clearTimeout(kontrolTimer);
+  kontrolTimer = setTimeout(() => {
+    document.getElementById('oynaticiKontrol').classList.add('gizli');
+  }, 3500);
+}
+
+// ── Tam ekran ──
+function tamEkranToggle() {
+  const el = document.getElementById('oynatici');
+  if(!document.fullscreenElement && !document.webkitFullscreenElement) {
+    (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  }
+}
+
+// ── Spinner ──
+function spinnerGoster(goster) {
+  document.getElementById('oySpinner').classList.toggle('goster', goster);
+}
+
+// ── KALİTE SEÇİMİ ──
+function secimAc(tip, e) {
+  e.stopPropagation();
+  const panel = document.getElementById('secimPanel');
+  const liste = document.getElementById('secimListesi');
+  const baslik = document.getElementById('secimBaslik');
+
+  if(panel.classList.contains('acik') && panel.dataset.tip === tip) {
+    secimKapat(); return;
+  }
+  panel.dataset.tip = tip;
+
+  if(tip === 'kalite') {
+    baslik.textContent = 'Kalite';
+    const seviyeler = hls ? hls.levels : [];
+    if(seviyeler.length === 0) {
+      liste.innerHTML = `<div class="secim-item aktif">Otomatik</div>`;
+    } else {
+      liste.innerHTML = `<div class="secim-item ${aktifKalite===-1?'aktif':''}" onclick="kaliteAyarla(-1)">Otomatik</div>` +
+        seviyeler.map((l,i) => {
+          const ad = l.height ? `${l.height}p` : `Seviye ${i+1}`;
+          return `<div class="secim-item ${aktifKalite===i?'aktif':''}" onclick="kaliteAyarla(${i})">${ad}</div>`;
+        }).join('');
+    }
+  } else if(tip === 'ses') {
+    baslik.textContent = 'Ses / Dublaj';
+    if(sesTraklari.length === 0) {
+      liste.innerHTML = `<div class="secim-item aktif">Varsayılan</div>`;
+    } else {
+      liste.innerHTML = sesTraklari.map((t,i) =>
+        `<div class="secim-item ${aktifSesTrak===i?'aktif':''}" onclick="sesTrakAyarla(${i})">${t.name||('Ses '+(i+1))}</div>`
+      ).join('');
+    }
+  } else if(tip === 'altyazi') {
+    baslik.textContent = 'Altyazı';
+    liste.innerHTML = `
+      <div class="secim-item ${!altyaziAktif?'aktif':''}" onclick="altyaziKapat()">Kapalı</div>
+      ${altyaziVerisi.length>0 ? `<div class="secim-item ${altyaziAktif?'aktif':''}" onclick="altyaziAc()">Yüklü Altyazı</div>` : ''}
+      <div class="secim-item" onclick="altyaziDosyaYukle(); secimKapat();">📎 Dosyadan Yükle (.srt)</div>
+    `;
+  }
+
+  panel.classList.add('acik');
+  kontrolGoster();
+}
+function secimKapat() {
+  document.getElementById('secimPanel').classList.remove('acik');
+}
+
+// ── Kalite ayarla ──
+function kaliteAyarla(seviye) {
+  if(!hls) return;
+  hls.currentLevel = seviye;
+  aktifKalite = seviye;
+  const ad = seviye === -1 ? 'Otomatik' : (hls.levels[seviye]?.height ? hls.levels[seviye].height+'p' : 'Seviye '+(seviye+1));
+  btnKaliteGuncelle(ad);
+  secimKapat();
+  toast(`Kalite: ${ad}`);
+}
+function btnKaliteGuncelle(ad) {
+  const btn = document.getElementById('btnKalite');
+  if(btn) btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 8h3l2 8"/><path d="M13 8h4"/><path d="M15 8v8"/></svg> ${ad}`;
+}
+
+// ── Ses track ayarla ──
+function sesTrakAyarla(idx) {
+  if(hls) hls.audioTrack = idx;
+  aktifSesTrak = idx;
+  secimKapat();
+  toast(`Ses: ${sesTraklari[idx]?.name || ('Ses '+(idx+1))}`);
+}
+
+// ── ALTYAZI SİSTEMİ ──
+function altyaziDosyaYukle() {
+  document.getElementById('altyaziDosya').click();
+}
+
+function altyaziDosyaIsle(input) {
+  const dosya = input.files[0];
+  if(!dosya) return;
+  const okuyucu = new FileReader();
+  okuyucu.onload = e => {
+    const icerik = e.target.result;
+    if(dosya.name.endsWith('.srt')) {
+      altyaziVerisi = srtCoz(icerik);
+    } else if(dosya.name.endsWith('.vtt')) {
+      altyaziVerisi = vttCoz(icerik);
+    }
+    if(altyaziVerisi.length > 0) {
+      altyaziAc();
+      toast(`Altyazı yüklendi: ${dosya.name} (${altyaziVerisi.length} satır)`);
+    } else {
+      toast('Altyazı okunamadı.');
+    }
+  };
+  okuyucu.readAsText(dosya, 'UTF-8');
+  input.value = '';
+}
+
+function srtCoz(metin) {
+  const bloklar = metin.replace(/\r\n/g,'\n').split(/\n\n+/);
+  return bloklar.map(b => {
+    const satirlar = b.trim().split('\n');
+    if(satirlar.length < 3) return null;
+    const zaman = satirlar[1].match(/(\d+):(\d+):(\d+)[,.](\d+)\s*-->\s*(\d+):(\d+):(\d+)[,.](\d+)/);
+    if(!zaman) return null;
+    const baslar = +zaman[1]*3600 + +zaman[2]*60 + +zaman[3] + +zaman[4]/1000;
+    const biter  = +zaman[5]*3600 + +zaman[6]*60 + +zaman[7] + +zaman[8]/1000;
+    const metinSatir = satirlar.slice(2).join('\n').replace(/<[^>]+>/g,'');
+    return { baslar, biter, metin: metinSatir };
+  }).filter(Boolean);
+}
+
+function vttCoz(metin) {
+  const bloklar = metin.replace(/\r\n/g,'\n').split(/\n\n+/);
+  return bloklar.map(b => {
+    const zaman = b.match(/(\d+):(\d+)[.:](\d+)\s*-->\s*(\d+):(\d+)[.:](\d+)/);
+    if(!zaman) return null;
+    const baslar = +zaman[1]*60 + +zaman[2] + +zaman[3]/1000;
+    const biter  = +zaman[4]*60 + +zaman[5] + +zaman[6]/1000;
+    const satirlar = b.split('\n').filter(s=>!s.includes('-->') && s.trim() && !s.match(/^\d+$/));
+    if(!satirlar.length) return null;
+    return { baslar, biter, metin: satirlar.join('\n').replace(/<[^>]+>/g,'') };
+  }).filter(Boolean);
+}
+
+function altyaziGuncelle(sure) {
+  const alan = document.getElementById('altyaziGoster');
+  const aktif = altyaziVerisi.find(a => sure >= a.baslar && sure <= a.biter);
+  alan.innerHTML = aktif
+    ? `<div class="altyazi-metin">${aktif.metin.replace(/\n/g,'<br>')}</div>`
+    : '';
+}
+
+function altyaziAc()   { altyaziAktif = true;  secimKapat(); toast('Altyazı açık'); }
+function altyaziKapat(){ altyaziAktif = false; secimKapat(); document.getElementById('altyaziGoster').innerHTML=''; toast('Altyazı kapalı'); }
+
+// ═══════════════════════════════
+// MODAL
+// ═══════════════════════════════
+function modalAc(id) { document.getElementById(id).classList.add('acik'); }
+function modalKapatId(id) { document.getElementById(id).classList.remove('acik'); }
+function modalKapat(id, e) { if(e.target.id===id) modalKapatId(id); }
+
+// ═══════════════════════════════
+// TOAST
+// ═══════════════════════════════
+let toastTimer;
+function toast(mesaj) {
+  const el = document.getElementById('toast');
+  el.textContent = mesaj;
+  el.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.style.display='none'; }, 3000);
+}
+</script>
+</body>
+</html>
